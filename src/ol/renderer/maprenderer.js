@@ -7,6 +7,7 @@ goog.require('goog.functions');
 goog.require('goog.fx.anim');
 goog.require('goog.fx.anim.Animated');
 goog.require('goog.vec.Mat4');
+goog.require('ol.FrameState');
 goog.require('ol.View2D');
 goog.require('ol.View2DProperty');
 
@@ -136,25 +137,6 @@ ol.renderer.Map.prototype.disposeInternal = function() {
     goog.array.forEach(this.layersListenerKeys_, goog.events.unlistenByKey);
   }
   goog.base(this, 'disposeInternal');
-};
-
-
-/**
- * @param {function(this: T, ol.layer.Layer, ol.renderer.Layer, number)} f
- *     Function.
- * @param {T=} opt_obj Object.
- * @template T
- */
-ol.renderer.Map.prototype.forEachReadyVisibleLayer = function(f, opt_obj) {
-  var layers = this.map.getLayers();
-  if (goog.isDef(layers)) {
-    layers.forEach(function(layer, index) {
-      if (layer.isReady() && layer.getVisible()) {
-        var layerRenderer = this.getLayerRenderer(layer);
-        f.call(opt_obj, layer, layerRenderer, index);
-      }
-    }, this);
-  }
 };
 
 
@@ -313,9 +295,9 @@ ol.renderer.Map.prototype.removeLayerRenderer = function(layer) {
 
 /**
  * Render.
- * @param {number} time Time.
+ * @param {?ol.FrameState} frameState Frame state.
  */
-ol.renderer.Map.prototype.renderFrame = goog.functions.FALSE;
+ol.renderer.Map.prototype.renderFrame = goog.nullFunction;
 
 
 /**

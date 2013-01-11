@@ -17,6 +17,7 @@ goog.require('goog.events.EventType');
 goog.require('goog.functions');
 goog.require('goog.style');
 goog.require('goog.webgl');
+goog.require('ol.Tile');
 goog.require('ol.layer.Layer');
 goog.require('ol.layer.TileLayer');
 goog.require('ol.renderer.webgl.FragmentShader');
@@ -144,12 +145,6 @@ ol.renderer.webgl.Map = function(container, map) {
 
   /**
    * @private
-   * @type {ol.Color}
-   */
-  this.clearColor_ = new ol.Color(1, 1, 1, 1);
-
-  /**
-   * @private
    * @type {{aPosition: number,
    *         aTexCoord: number,
    *         uColorMatrix: WebGLUniformLocation,
@@ -219,15 +214,15 @@ ol.renderer.webgl.Map.prototype.addLayer = function(layer) {
 
 
 /**
- * @param {Image} image Image.
+ * @param {ol.Tile} tile Tile.
  * @param {number} magFilter Mag filter.
  * @param {number} minFilter Min filter.
  */
-ol.renderer.webgl.Map.prototype.bindImageTexture =
-    function(image, magFilter, minFilter) {
+ol.renderer.webgl.Map.prototype.bindTileTexture =
+    function(tile, magFilter, minFilter) {
   var gl = this.getGL();
-  var imageKey = image.src;
-  var textureCacheEntry = this.textureCache_[imageKey];
+  var tileKey = tile.getKey();
+  var textureCacheEntry = this.textureCache_[tileKey];
   if (goog.isDef(textureCacheEntry)) {
     gl.bindTexture(goog.webgl.TEXTURE_2D, textureCacheEntry.texture);
     if (textureCacheEntry.magFilter != magFilter) {
@@ -244,7 +239,7 @@ ol.renderer.webgl.Map.prototype.bindImageTexture =
     var texture = gl.createTexture();
     gl.bindTexture(goog.webgl.TEXTURE_2D, texture);
     gl.texImage2D(goog.webgl.TEXTURE_2D, 0, goog.webgl.RGBA, goog.webgl.RGBA,
-        goog.webgl.UNSIGNED_BYTE, image);
+        goog.webgl.UNSIGNED_BYTE, tile.getImage());
     gl.texParameteri(
         goog.webgl.TEXTURE_2D, goog.webgl.TEXTURE_MAG_FILTER, magFilter);
     gl.texParameteri(
@@ -253,7 +248,7 @@ ol.renderer.webgl.Map.prototype.bindImageTexture =
         goog.webgl.CLAMP_TO_EDGE);
     gl.texParameteri(goog.webgl.TEXTURE_2D, goog.webgl.TEXTURE_WRAP_T,
         goog.webgl.CLAMP_TO_EDGE);
-    this.textureCache_[imageKey] = {
+    this.textureCache_[tileKey] = {
       texture: texture,
       magFilter: magFilter,
       minFilter: minFilter
@@ -373,12 +368,6 @@ ol.renderer.webgl.Map.prototype.getShader = function(shaderObject) {
  * @inheritDoc
  */
 ol.renderer.webgl.Map.prototype.handleBackgroundColorChanged = function() {
-  var backgroundColor = this.getMap().getBackgroundColor();
-  this.clearColor_ = new ol.Color(
-      backgroundColor.r / 255,
-      backgroundColor.g / 255,
-      backgroundColor.b / 255,
-      backgroundColor.a / 255);
   this.getMap().render();
 };
 
@@ -465,11 +454,11 @@ ol.renderer.webgl.Map.prototype.initializeGL_ = function() {
 
 
 /**
- * @param {Image} image Image.
- * @return {boolean} Is image texture loaded.
+ * @param {ol.Tile} tile Tile.
+ * @return {boolean} Is tile texture loaded.
  */
-ol.renderer.webgl.Map.prototype.isImageTextureLoaded = function(image) {
-  return image.src in this.textureCache_;
+ol.renderer.webgl.Map.prototype.isTileTextureLoaded = function(tile) {
+  return tile.getKey() in this.textureCache_;
 };
 
 
@@ -501,34 +490,37 @@ ol.renderer.webgl.Map.prototype.removeLayerRenderer = function(layer) {
 /**
  * @inheritDoc
  */
-ol.renderer.webgl.Map.prototype.renderFrame = function(time) {
+ol.renderer.webgl.Map.prototype.renderFrame = function(frameState) {
 
-  var map = this.getMap();
-  if (!map.isDef()) {
-    return;
+  var gl = this.getGL();
+
+  if (goog.isNull(frameState)) {
+    gl.bindFramebuffer(goog.webgl.FRAMEBUFFER, null);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(goog.webgl.COLOR_BUFFER_BIT);
+    return false;
   }
 
-  var requestRenderFrame = false;
-
-  this.forEachReadyVisibleLayer(function(layer, layerRenderer) {
-    if (layerRenderer.renderFrame(time)) {
-      requestRenderFrame = true;
+  goog.array.forEach(frameState.layersArray, function(layer) {
+    var layerState = frameState.layerStates[goog.getUid(layer)];
+    if (!layerState.visible || !layerState.ready) {
+      return;
     }
-  });
+    var layerRenderer = this.getLayerRenderer(layer);
+    layerRenderer.renderFrame(frameState, layerState);
+  }, this);
 
-  var size = /** @type {ol.Size} */ (this.getMap().getSize());
+  var size = frameState.size;
   if (!this.canvasSize_.equals(size)) {
     this.canvas_.width = size.width;
     this.canvas_.height = size.height;
     this.canvasSize_ = size;
   }
 
-  var gl = this.getGL();
-
   gl.bindFramebuffer(goog.webgl.FRAMEBUFFER, null);
 
-  gl.clearColor(this.clearColor_.r, this.clearColor_.g, this.clearColor_.b,
-      this.clearColor_.a);
+  var clearColor = frameState.backgroundColor;
+  gl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
   gl.clear(goog.webgl.COLOR_BUFFER_BIT);
   gl.enable(goog.webgl.BLEND);
   gl.viewport(0, 0, size.width, size.height);
@@ -568,7 +560,12 @@ ol.renderer.webgl.Map.prototype.renderFrame = function(time) {
       this.locations_.aTexCoord, 2, goog.webgl.FLOAT, false, 16, 8);
   gl.uniform1i(this.locations_.uTexture, 0);
 
-  this.forEachReadyVisibleLayer(function(layer, layerRenderer) {
+  goog.array.forEach(frameState.layersArray, function(layer) {
+    var layerState = frameState.layerStates[goog.getUid(layer)];
+    if (!layerState.visible || !layerState.ready) {
+      return;
+    }
+    var layerRenderer = this.getLayerRenderer(layer);
     gl.uniformMatrix4fv(
         this.locations_.uMatrix, false, layerRenderer.getMatrix());
     gl.uniformMatrix4fv(
@@ -577,10 +574,6 @@ ol.renderer.webgl.Map.prototype.renderFrame = function(time) {
     gl.bindTexture(goog.webgl.TEXTURE_2D, layerRenderer.getTexture());
     gl.drawArrays(goog.webgl.TRIANGLE_STRIP, 0, 4);
   }, this);
-
-  if (requestRenderFrame) {
-    this.getMap().requestRenderFrame();
-  }
 
 };
 

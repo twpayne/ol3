@@ -29,15 +29,18 @@ goog.require('ol.Collection');
 goog.require('ol.Color');
 goog.require('ol.Coordinate');
 goog.require('ol.Extent');
+goog.require('ol.FrameState');
 goog.require('ol.MapBrowserEvent');
 goog.require('ol.Object');
 goog.require('ol.Pixel');
 goog.require('ol.ResolutionConstraint');
 goog.require('ol.RotationConstraint');
 goog.require('ol.Size');
+goog.require('ol.TileQueue');
 goog.require('ol.TransformFunction');
 goog.require('ol.View');
 goog.require('ol.View2D');
+goog.require('ol.View2DState');
 goog.require('ol.control.Attribution');
 goog.require('ol.control.Zoom');
 goog.require('ol.interaction.DblClickZoom');
@@ -90,14 +93,6 @@ ol.DEFAULT_RENDERER_HINTS = [
 /**
  * @enum {string}
  */
-ol.MapEventType = {
-  POSTRENDER: 'postrender'
-};
-
-
-/**
- * @enum {string}
- */
 ol.MapProperty = {
   BACKGROUND_COLOR: 'backgroundColor',
   LAYERS: 'layers',
@@ -133,6 +128,12 @@ ol.Map = function(mapOptions) {
   this.animationDelay_ =
       new goog.async.AnimationDelay(this.renderFrame_, undefined, this);
   this.registerDisposable(this.animationDelay_);
+
+  /**
+   * @private
+   * @type {?ol.FrameState}
+   */
+  this.frameState_ = null;
 
   /**
    * @private
@@ -231,6 +232,30 @@ ol.Map = function(mapOptions) {
   goog.events.listen(this.viewportSizeMonitor_, goog.events.EventType.RESIZE,
       this.handleBrowserWindowResize, false, this);
 
+  /**
+   * @private
+   * @type {Array.<ol.PreRenderFunction>}
+   */
+  this.preRenderFunctions_ = [];
+
+  /**
+   * @private
+   * @type {Array.<ol.PostRenderFunction>}
+   */
+  this.postRenderFunctions_ = [];
+
+  /**
+   * @private
+   * @type {function(this: ol.Map)}
+   */
+  this.handlePostRender_ = goog.bind(this.handlePostRender, this);
+
+  /**
+   * @private
+   * @type {ol.TileQueue}
+   */
+  this.tileQueue_ = new ol.TileQueue(goog.bind(this.getTilePriority, this));
+
   this.setValues(mapOptionsInternal.values);
 
   this.handleBrowserWindowResize();
@@ -245,6 +270,26 @@ ol.Map = function(mapOptions) {
 
 };
 goog.inherits(ol.Map, ol.Object);
+
+
+/**
+ * @param {ol.PreRenderFunction} preRenderFunction Pre-render function.
+ */
+ol.Map.prototype.addPreRenderFunction = function(preRenderFunction) {
+  this.requestRenderFrame();
+  this.preRenderFunctions_.push(preRenderFunction);
+};
+
+
+/**
+ * @param {Array.<ol.PreRenderFunction>} preRenderFunctions
+ *     Pre-render functions.
+ */
+ol.Map.prototype.addPreRenderFunctions = function(preRenderFunctions) {
+  this.requestRenderFrame();
+  Array.prototype.push.apply(
+      this.preRenderFunctions_, preRenderFunctions);
+};
 
 
 /**
@@ -383,6 +428,24 @@ ol.Map.prototype.getOverlayContainer = function() {
 
 
 /**
+ * @param {ol.Tile} tile Tile.
+ * @param {ol.Coordinate} tileCenter Tile center.
+ * @param {number} tileResolution Tile resolution.
+ * @return {number|undefined} Tile priority.
+ */
+ol.Map.prototype.getTilePriority = function(tile, tileCenter, tileResolution) {
+  if (goog.isNull(this.frameState_)) {
+    return undefined;
+  } else {
+    var center = this.frameState_.view2DState.center;
+    var deltaX = tileCenter.x - center.x;
+    var deltaY = tileCenter.y - center.y;
+    return Math.sqrt(deltaX * deltaX + deltaY * deltaY) / tileResolution;
+  }
+};
+
+
+/**
  * @param {goog.events.BrowserEvent} browserEvent Browser event.
  * @param {string=} opt_type Type.
  */
@@ -429,6 +492,22 @@ ol.Map.prototype.handleMapBrowserEvent = function(mapBrowserEvent) {
       }
     }
   }
+};
+
+
+/**
+ * @protected
+ */
+ol.Map.prototype.handlePostRender = function() {
+  this.tileQueue_.reprioritize(); // FIXME only call if needed
+  this.tileQueue_.loadMoreTiles();
+  goog.array.forEach(
+      this.postRenderFunctions_,
+      function(postRenderFunction) {
+        postRenderFunction(this, this.frameState_);
+      },
+      this);
+  this.postRenderFunctions_.length = 0;
 };
 
 
@@ -484,18 +563,90 @@ ol.Map.prototype.requestRenderFrame = function() {
  * @private
  */
 ol.Map.prototype.renderFrame_ = function(time) {
+
+  var i;
+
   if (this.freezeRenderingCount_ != 0) {
     return;
   }
+
   if (goog.DEBUG) {
     this.logger.info('renderFrame_');
   }
-  this.renderer_.renderFrame(time);
-  this.dirty_ = false;
-  if (goog.DEBUG) {
-    this.logger.info('postrender');
+
+  var size = this.getSize();
+  var layers = this.getLayers();
+  var layersArray = goog.isDef(layers) ?
+      /** @type {Array.<ol.layer.Layer>} */ (layers.getArray()) : undefined;
+  var view = this.getView();
+  var view2D = goog.isDef(view) ? this.getView().getView2D() : undefined;
+  /** @type {?ol.FrameState} */
+  var frameState = null;
+  if (goog.isDef(layersArray) && goog.isDef(size) && goog.isDef(view2D) &&
+      view2D.isDef()) {
+    var backgroundColor = this.getBackgroundColor();
+    var layerStates = {};
+    goog.array.forEach(layersArray, function(layer) {
+      layerStates[goog.getUid(layer)] = layer.getLayerState();
+    });
+    var view2DState = view2D.getView2DState();
+    frameState = {
+      animate: false,
+      backgroundColor: goog.isDef(backgroundColor) ?
+          backgroundColor : new ol.Color(1, 1, 1, 1),
+      extent: null,
+      layersArray: layersArray,
+      layerStates: layerStates,
+      postRenderFunctions: [],
+      size: size,
+      tileQueue: this.tileQueue_,
+      view2DState: view2DState,
+      time: time
+    };
   }
-  this.dispatchEvent(ol.MapEventType.POSTRENDER);
+
+  this.preRenderFunctions_ = goog.array.filter(
+      this.preRenderFunctions_,
+      function(preRenderFunction) {
+        return preRenderFunction(this, frameState);
+      },
+      this);
+
+  if (!goog.isNull(frameState)) {
+    var center = view2DState.center;
+    var resolution = view2DState.resolution;
+    var rotation = view2DState.rotation;
+    var x = resolution * size.width / 2;
+    var y = resolution * size.height / 2;
+    var corners = [
+      new ol.Coordinate(-x, -y),
+      new ol.Coordinate(-x, y),
+      new ol.Coordinate(x, -y),
+      new ol.Coordinate(x, y)
+    ];
+    var corner;
+    for (i = 0; i < 4; ++i) {
+      corner = corners[i];
+      corner.rotate(rotation);
+      corner.add(center);
+    }
+    frameState.extent = ol.Extent.boundingExtent.apply(null, corners);
+  }
+
+  this.renderer_.renderFrame(frameState);
+
+  if (!goog.isNull(frameState)) {
+    if (frameState.animate) {
+      this.requestRenderFrame();
+    }
+    Array.prototype.push.apply(
+        this.postRenderFunctions_, frameState.postRenderFunctions);
+  }
+  this.frameState_ = frameState;
+  this.dirty_ = false;
+
+  goog.global.setTimeout(this.handlePostRender_, 0);
+
 };
 
 
