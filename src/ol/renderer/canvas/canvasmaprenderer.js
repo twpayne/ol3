@@ -33,10 +33,11 @@ ol.renderer.canvas.Map = function(container, map) {
    * @private
    * @type {Element}
    */
-  this.canvas_ = goog.dom.createElement(goog.dom.TagName.CANVAS);
-  this.canvas_.height = this.canvasSize_.height;
-  this.canvas_.width = this.canvasSize_.width;
-  this.canvas_.className = 'ol-unselectable';
+  this.canvas_ = goog.dom.createDom(goog.dom.TagName.CANVAS, {
+    'class': 'ol-unselectable',
+    width: this.canvasSize_.width,
+    height: this.canvasSize_.height
+  });
   goog.dom.insertChildAt(container, this.canvas_, 0);
 
   /**

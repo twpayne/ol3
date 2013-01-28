@@ -29,8 +29,7 @@ goog.require('ol.tilegrid.TileGrid');
  */
 ol.renderer.dom.TileLayer = function(mapRenderer, tileLayer) {
 
-  var target = goog.dom.createElement(goog.dom.TagName.DIV);
-  target.className = 'ol-layer';
+  var target = goog.dom.createDom(goog.dom.TagName.DIV, 'ol-layer');
   target.style.position = 'absolute';
 
   goog.base(this, mapRenderer, tileLayer, target);

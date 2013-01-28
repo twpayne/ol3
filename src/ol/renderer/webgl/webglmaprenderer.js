@@ -117,10 +117,11 @@ ol.renderer.webgl.Map = function(container, map) {
    * @private
    * @type {Element}
    */
-  this.canvas_ = goog.dom.createElement(goog.dom.TagName.CANVAS);
-  this.canvas_.height = container.clientHeight;
-  this.canvas_.width = container.clientWidth;
-  this.canvas_.className = 'ol-unselectable';
+  this.canvas_ = goog.dom.createDom(goog.dom.TagName.CANVAS, {
+    'class': 'ol-unselectable',
+    width: container.clientHeight,
+    height: container.clientHeight
+  });
   goog.dom.insertChildAt(container, this.canvas_, 0);
 
   /**
