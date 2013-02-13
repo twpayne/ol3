@@ -30,12 +30,6 @@ ol.control.MousePosition = function(mousePositionOptions) {
     'class': 'ol-mouse-position'
   });
 
-  goog.base(this, {
-    element: element,
-    map: mousePositionOptions.map,
-    target: mousePositionOptions.target
-  });
-
   /**
    * @private
    * @type {ol.Projection|undefined}
@@ -90,6 +84,12 @@ ol.control.MousePosition = function(mousePositionOptions) {
    * @type {Array.<?number>}
    */
   this.listenerKeys_ = null;
+
+  goog.base(this, {
+    element: element,
+    map: mousePositionOptions.map,
+    target: mousePositionOptions.target
+  });
 
 };
 goog.inherits(ol.control.MousePosition, ol.control.Control);

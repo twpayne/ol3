@@ -31,12 +31,6 @@ ol.control.Attribution = function(attributionOptions) {
     'class': 'ol-attribution ol-unselectable'
   }, this.ulElement_);
 
-  goog.base(this, {
-    element: element,
-    map: attributionOptions.map,
-    target: attributionOptions.target
-  });
-
   /**
    * @private
    * @type {boolean}
@@ -60,6 +54,12 @@ ol.control.Attribution = function(attributionOptions) {
    * @type {Array.<?number>}
    */
   this.listenerKeys_ = null;
+
+  goog.base(this, {
+    element: element,
+    map: attributionOptions.map,
+    target: attributionOptions.target
+  });
 
 };
 goog.inherits(ol.control.Attribution, ol.control.Control);
