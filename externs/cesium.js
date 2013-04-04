@@ -331,14 +331,14 @@ Cesium.ImageryProvider.prototype.getLogo = function() {};
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.
- * @return {Object|undefined} 
+ * @return {Cesium.Promise|undefined}
  */
 Cesium.ImageryProvider.prototype.requestImage = function(x, y, level) {};
 
 
 /**
  * @param {string} url
- * @return {Object}
+ * @return {Cesium.Promise}
  */
 Cesium.ImageryProvider.loadImage = function(url) {};
 
@@ -492,6 +492,13 @@ Cesium.PerspectiveFrustrum.prototype.fovy;
  * @type {number}
  */
 Cesium.PerspectiveFrustrum.prototype.near;
+
+
+
+/**
+ * @constructor
+ */
+Cesium.Promise = function() {};
 
 
 
