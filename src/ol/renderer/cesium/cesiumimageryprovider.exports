@@ -1,9 +1,0 @@
-@exportSymbol ol.renderer.cesium.ImageryProvider
-@exportProperty ol.renderer.cesium.ImageryProvider.prototype.isReady
-@exportProperty ol.renderer.cesium.ImageryProvider.prototype.getTileWidth
-@exportProperty ol.renderer.cesium.ImageryProvider.prototype.getTileHeight
-@exportProperty ol.renderer.cesium.ImageryProvider.prototype.getMaximumLevel
-@exportProperty ol.renderer.cesium.ImageryProvider.prototype.getTileDiscardPolicy
-@exportProperty ol.renderer.cesium.ImageryProvider.prototype.getErrorEvent
-@exportProperty ol.renderer.cesium.ImageryProvider.prototype.getLogo
-@exportProperty ol.renderer.cesium.ImageryProvider.prototype.requestImage
