@@ -4,6 +4,7 @@ goog.require('goog.asserts');
 goog.require('goog.debug.Logger');
 goog.require('goog.dom');
 goog.require('goog.dom.TagName');
+goog.require('ol.Size');
 goog.require('ol.layer.TileLayer');
 goog.require('ol.renderer.Map');
 goog.require('ol.renderer.cesium.Layer');
