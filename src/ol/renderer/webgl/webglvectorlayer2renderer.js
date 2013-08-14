@@ -1,11 +1,21 @@
 goog.provide('ol.renderer.webgl.VectorLayer2');
 
+goog.require('goog.asserts');
 goog.require('goog.vec.Mat4');
 goog.require('goog.webgl');
 goog.require('ol.math');
 goog.require('ol.renderer.webgl.Layer');
 goog.require('ol.renderer.webgl.vectorlayer2.shader.LineStringCollection');
 goog.require('ol.renderer.webgl.vectorlayer2.shader.PointCollection');
+goog.require('ol.style.LineLiteral');
+
+
+/***
+ * @typedef {{start: number,
+ *            stop: number,
+ *            style: ol.style.LineLiteral}}
+ */
+ol.LineStyleRange;
 
 
 
@@ -42,6 +52,42 @@ ol.renderer.webgl.VectorLayer2 = function(mapRenderer, vectorLayer2) {
 
 };
 goog.inherits(ol.renderer.webgl.VectorLayer2, ol.renderer.webgl.Layer);
+
+
+/**
+ * @param {ol.geom2.LineStringCollection} lineStrings Line strings.
+ * @param {Array.<ol.style.LineLiteral>} styles Styles.
+ * @return {Array.<ol.LineStyleRange>} Line style ranges.
+ * @private
+ */
+ol.renderer.webgl.VectorLayer2.getLineStyleRanges_ =
+    function(lineStrings, styles) {
+  var n = lineStrings.getCount();
+  goog.asserts.assert(styles.length == n);
+  var lineStyleRanges = [];
+  if (n !== 0) {
+    var start = 0;
+    var style = styles[0];
+    var i;
+    for (i = 1; i < n; ++i) {
+      if (!styles[i].equals(style)) {
+        lineStyleRanges.push({
+          start: start,
+          stop: i,
+          style: style
+        });
+        start = i;
+        style = styles[i];
+      }
+    }
+    lineStyleRanges.push({
+      start: start,
+      stop: n,
+      style: style
+    });
+  }
+  return lineStyleRanges;
+};
 
 
 /**
