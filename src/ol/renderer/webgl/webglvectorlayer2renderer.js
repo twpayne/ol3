@@ -325,6 +325,11 @@ ol.renderer.webgl.VectorLayer2.prototype.renderLineStrings =
         locations.PositionN, 2, goog.webgl.FLOAT, false, 12, 48);
     gl.vertexAttribPointer(
         locations.Control, 1, goog.webgl.FLOAT, false, 12, 32);
+    var lineWidth = 1.5;
+    var antiAliasing = 1.5;
+    var outlineWidth = 0.001;
+    gl.vertexAttrib2f(
+        locations.Style, lineWidth * 0.5 + antiAliasing, outlineWidth * 0.5);
     gl.drawArrays(goog.webgl.TRIANGLES, 0, vertices.length / 3 - 4);
   }
 
