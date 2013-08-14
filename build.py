@@ -238,6 +238,9 @@ def build_src_external_src_types_js(t):
              '--typedef', 'src/objectliterals.jsdoc')
 
 
+virtual('shaders', SHADER_SRC)
+
+
 if os.path.exists(TEMPLATE_GLSL_COMPILER_JS):
     for glsl_src in GLSL_SRC:
         def shader_src_helper(glsl_src):
