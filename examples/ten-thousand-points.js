@@ -1,3 +1,4 @@
+goog.require('goog.debug.Console');
 goog.require('ol.Map');
 goog.require('ol.RendererHint');
 goog.require('ol.View2D');
@@ -9,6 +10,9 @@ goog.require('ol.layer.TileLayer');
 goog.require('ol.layer.VectorLayer2');
 goog.require('ol.source.OSM');
 goog.require('ol.source.VectorSource2');
+
+
+goog.debug.Console.autoInstall();
 
 
 // WARNING
