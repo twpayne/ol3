@@ -1,4 +1,5 @@
 goog.provide('ol.renderer.webgl.VectorLayer2');
+goog.provide('ol.webglnew.geometry');
 
 goog.require('goog.asserts');
 goog.require('goog.vec.Mat4');
@@ -7,7 +8,22 @@ goog.require('ol.math');
 goog.require('ol.renderer.webgl.Layer');
 goog.require('ol.renderer.webgl.vectorlayer2.shader.LineStringCollection');
 goog.require('ol.renderer.webgl.vectorlayer2.shader.PointCollection');
+goog.require('ol.structs.Buffer');
 goog.require('ol.style.LineLiteral');
+
+
+/**
+ * @enum {number}
+ */
+ol.webglnew.geometry = {
+  LF_LINE: 0,                 // coordinates represent a line
+  LF_RING: 1,                 // coordinates represent a ring
+  LF_OUTLINE_INNER: 4,        // outline left (ccw)      V|  |^
+  LF_OUTLINE_OUTER: 8,        // outline right (ccw)    |V    ^|
+  LF_LINE_OUTLINE_CAPS: 2,    // outline top and bottom
+  LF_RING_CLOSED: 3,          // re-emit first vertex pair
+  LF_OUTLINE_PROPORTIONAL: 16 // needed w/o derivatives
+};
 
 
 /***
@@ -52,6 +68,88 @@ ol.renderer.webgl.VectorLayer2 = function(mapRenderer, vectorLayer2) {
 
 };
 goog.inherits(ol.renderer.webgl.VectorLayer2, ol.renderer.webgl.Layer);
+
+
+/**
+ * @param {Array.<number>} coords Coords.
+ * @param {boolean=} opt_ring Ring.
+ * @param {Array.<number>=} opt_dest Dest.
+ * @private
+ * @return {Array.<number>} Expanded line.
+ */
+ol.renderer.webgl.VectorLayer2.expandLine_ = function(
+    coords, opt_ring, opt_dest) {
+
+  var flags = (ol.webglnew.geometry.LF_OUTLINE_INNER |
+               ol.webglnew.geometry.LF_OUTLINE_OUTER |
+               (opt_ring ? ol.webglnew.geometry.LF_RING_CLOSED :
+                           ol.webglnew.geometry.LF_LINE_OUTLINE_CAPS));
+
+  //
+  var result = opt_dest || [];
+  var iLast = coords.length - 2, iFirstSentinel, iLastSentinel;
+
+  var surfInner = 4 - (flags & ol.webglnew.geometry.LF_OUTLINE_INNER ? 4 : 0),
+      surfOuter = 4 + (flags & ol.webglnew.geometry.LF_OUTLINE_OUTER ? 4 : 0),
+      ctrl;
+
+  if (!(flags & ol.webglnew.geometry.LF_RING)) {
+    iFirstSentinel = 0;
+    iLastSentinel = iLast;
+    ctrl = 1 - (flags & ol.webglnew.geometry.LF_LINE_OUTLINE_CAPS ? 1 : 0);
+  } else {
+    iFirstSentinel = iLast;
+    iLastSentinel = 0;
+    ctrl = 1;
+  }
+  var ctrlLast = 2 - ctrl;
+
+  result.push(coords[iFirstSentinel]);
+  result.push(coords[iFirstSentinel + 1]);
+  result.push(3);
+  result.push(coords[iFirstSentinel]);
+  result.push(coords[iFirstSentinel + 1]);
+  result.push(3);
+
+  for (var i = 0; i < iLast; i += 2) {
+
+    result.push(coords[i]);
+    result.push(coords[i + 1]);
+    result.push(ctrl + surfInner);
+    result.push(coords[i]);
+    result.push(coords[i + 1]);
+    result.push(ctrl + surfOuter);
+
+    ctrl = 1;
+  }
+
+  result.push(coords[iLast]);
+  result.push(coords[iLast + 1]);
+  result.push(ctrlLast + surfInner);
+  result.push(coords[iLast]);
+  result.push(coords[iLast + 1]);
+  result.push(ctrlLast + surfOuter);
+
+  if ((flags & ol.webglnew.geometry.LF_RING_CLOSED) ==
+      ol.webglnew.geometry.LF_RING_CLOSED) {
+    result.push(coords[0]);
+    result.push(coords[1]);
+    result.push(ctrl + surfInner);
+    result.push(coords[0]);
+    result.push(coords[1]);
+    result.push(ctrl + surfOuter);
+    iLastSentinel = 2;
+  }
+
+  result.push(coords[iLastSentinel]);
+  result.push(coords[iLastSentinel + 1]);
+  result.push(3);
+  result.push(coords[iLastSentinel]);
+  result.push(coords[iLastSentinel + 1]);
+  result.push(3);
+
+  return result;
+};
 
 
 /**
@@ -151,7 +249,7 @@ ol.renderer.webgl.VectorLayer2.prototype.renderFrame =
   }
   var lineStrings = vectorSource.getLineStrings();
   if (lineStrings.length > 0) {
-    this.renderLineStrings(lineStrings);
+    this.renderLineStrings(lineStrings, framebufferDimension);
   }
 
   goog.vec.Mat4.makeIdentity(this.texCoordMatrix);
@@ -173,9 +271,10 @@ ol.renderer.webgl.VectorLayer2.prototype.renderFrame =
 
 /**
  * @param {Array.<ol.StyledLineStringCollection>} lineStrings Line strings.
+ * @param {number} framebufferDimension Framebuffer dimension.
  */
 ol.renderer.webgl.VectorLayer2.prototype.renderLineStrings =
-    function(lineStrings) {
+    function(lineStrings, framebufferDimension) {
 
   var mapRenderer = this.getWebGLMapRenderer();
   var gl = mapRenderer.getGL();
@@ -192,31 +291,47 @@ ol.renderer.webgl.VectorLayer2.prototype.renderLineStrings =
             Locations(gl, program);
   }
 
-  gl.uniformMatrix4fv(this.lineStringCollectionLocations_.u_modelViewMatrix,
-      false, this.modelViewMatrix_);
+  var locations = this.lineStringCollectionLocations_;
+  gl.uniformMatrix4fv(locations.Transform, false, this.modelViewMatrix_);
+  gl.uniform2f(locations.PixelScale,
+      2 / framebufferDimension, 2 / framebufferDimension);
+  gl.enableVertexAttribArray(locations.PositionP);
+  gl.enableVertexAttribArray(locations.Position0);
+  gl.enableVertexAttribArray(locations.PositionN);
+  gl.enableVertexAttribArray(locations.Control);
 
   var buf, dim, i, indexBuffer, indices, lineStringCollection;
   for (i = 0; i < lineStrings.length; ++i) {
     lineStringCollection = lineStrings[i].lineStrings;
     buf = lineStringCollection.buf;
     dim = lineStringCollection.dim;
-    mapRenderer.bindBuffer(goog.webgl.ARRAY_BUFFER, buf);
-    // FIXME re-use index buffer
-    // FIXME use mapRenderer.bindBuffer
-    indices = lineStringCollection.getIndices();
-    indexBuffer = gl.createBuffer();
-    gl.bindBuffer(goog.webgl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    gl.bufferData(
-        goog.webgl.ELEMENT_ARRAY_BUFFER, indices, goog.webgl.DYNAMIC_DRAW);
-    gl.enableVertexAttribArray(this.lineStringCollectionLocations_.a_position);
-    gl.vertexAttribPointer(this.lineStringCollectionLocations_.a_position, 2,
-        goog.webgl.FLOAT, false, 4 * dim, 0);
-    gl.uniform4fv(this.lineStringCollectionLocations_.u_color, [1, 1, 0, 0.75]);
-    gl.drawElements(
-        goog.webgl.LINES, indices.length, goog.webgl.UNSIGNED_SHORT, 0);
-    gl.bindBuffer(goog.webgl.ELEMENT_ARRAY_BUFFER, null);
-    gl.deleteBuffer(indexBuffer);
+    goog.asserts.assert(dim == 2);
+    var vertices = [];
+    var ranges = lineStringCollection.ranges;
+    for (var offset in ranges) {
+      var end = ranges[offset];
+      var coords = buf.getArray().slice(offset, end);
+      //window.console.log(coords);
+      ol.renderer.webgl.VectorLayer2.expandLine_(coords, false, vertices);
+      //window.console.log(vertices);
+    }
+    var verticiesBuf = new ol.structs.Buffer(vertices);
+    mapRenderer.bindBuffer(goog.webgl.ARRAY_BUFFER, verticiesBuf);
+    gl.vertexAttribPointer(
+        locations.PositionP, 2, goog.webgl.FLOAT, false, 12, 0);
+    gl.vertexAttribPointer(
+        locations.Position0, 2, goog.webgl.FLOAT, false, 12, 24);
+    gl.vertexAttribPointer(
+        locations.PositionN, 2, goog.webgl.FLOAT, false, 12, 48);
+    gl.vertexAttribPointer(
+        locations.Control, 1, goog.webgl.FLOAT, false, 12, 32);
+    gl.drawArrays(goog.webgl.TRIANGLES, 0, vertices.length / 3 - 4);
   }
+
+  gl.disableVertexAttribArray(locations.PositionP);
+  gl.disableVertexAttribArray(locations.Position0);
+  gl.disableVertexAttribArray(locations.PositionN);
+  gl.disableVertexAttribArray(locations.Control);
 
 };
 
