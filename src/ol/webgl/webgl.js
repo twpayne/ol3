@@ -3,6 +3,7 @@ goog.provide('ol.webgl.WebGLContextEventType');
 
 goog.require('goog.dom');
 goog.require('goog.dom.TagName');
+goog.require('goog.webgl');
 
 
 /**
@@ -24,6 +25,40 @@ ol.webgl.CONTEXT_IDS_ = [
 ol.webgl.WebGLContextEventType = {
   LOST: 'webglcontextlost',
   RESTORED: 'webglcontextrestored'
+};
+
+
+/**
+ * @param {WebGLRenderingContext} gl Context.
+ * @param {WebGLProgram} program Program.
+ * @return {Array.<WebGLActiveInfo>} Active attributes.
+ */
+ol.webgl.getActiveAttributes = function(gl, program) {
+  var n = /** @type {number} */ (
+      gl.getProgramParameter(program, goog.webgl.ACTIVE_ATTRIBUTES));
+  var result = new Array(n);
+  var i;
+  for (i = 0; i < n; ++i) {
+    result[i] = gl.getActiveAttrib(program, i);
+  }
+  return result;
+};
+
+
+/**
+ * @param {WebGLRenderingContext} gl Context.
+ * @param {WebGLProgram} program Program.
+ * @return {Array.<WebGLActiveInfo>} Active uniforms.
+ */
+ol.webgl.getActiveUniforms = function(gl, program) {
+  var n = /** @type {number} */ (
+      gl.getProgramParameter(program, goog.webgl.ACTIVE_UNIFORMS));
+  var result = new Array(n);
+  var i;
+  for (i = 0; i < n; ++i) {
+    result[i] = gl.getActiveUniform(program, i);
+  }
+  return result;
 };
 
 
