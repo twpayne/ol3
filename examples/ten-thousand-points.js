@@ -40,6 +40,23 @@ var lineStringCollection = ol.geom2.LineStringCollection.pack([
    [-10 * k, 5 * k],
    [0 * k, 15 * k]]
 ]);
+var styles = [
+  {
+    strokeColor: 'yellow',
+    strokeWidth: 1,
+    strokeOpacity: 1
+  },
+  {
+    strokeColor: 'yellow',
+    strokeWidth: 1,
+    strokeOpacity: 1
+  },
+  {
+    strokeColor: 'yellow',
+    strokeWidth: 1,
+    strokeOpacity: 1
+  }
+];
 
 var map = new ol.Map({
   controls: ol.control.defaults({}, [
@@ -53,7 +70,10 @@ var map = new ol.Map({
     }),
     new ol.layer.VectorLayer2({
       source: new ol.source.VectorSource2({
-        lineStringCollections: [lineStringCollection],
+        lineStrings: [{
+          lineStrings: lineStringCollection,
+          styles: styles
+        }],
         projection: 'EPSG:3857',
         pointCollections: [pointCollection]
       })

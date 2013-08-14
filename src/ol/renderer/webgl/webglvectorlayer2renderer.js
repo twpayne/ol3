@@ -103,9 +103,9 @@ ol.renderer.webgl.VectorLayer2.prototype.renderFrame =
   if (pointCollections.length > 0) {
     this.renderPointCollections(pointCollections);
   }
-  var lineStringCollections = vectorSource.getLineStringCollections();
-  if (lineStringCollections.length > 0) {
-    this.renderLineStringCollections(lineStringCollections);
+  var lineStrings = vectorSource.getLineStrings();
+  if (lineStrings.length > 0) {
+    this.renderLineStrings(lineStrings);
   }
 
   goog.vec.Mat4.makeIdentity(this.texCoordMatrix);
@@ -126,11 +126,10 @@ ol.renderer.webgl.VectorLayer2.prototype.renderFrame =
 
 
 /**
- * @param {Array.<ol.geom2.LineStringCollection>} lineStringCollections Line
- *     string collections.
+ * @param {Array.<ol.StyledLineStringCollection>} lineStrings Line strings.
  */
-ol.renderer.webgl.VectorLayer2.prototype.renderLineStringCollections =
-    function(lineStringCollections) {
+ol.renderer.webgl.VectorLayer2.prototype.renderLineStrings =
+    function(lineStrings) {
 
   var mapRenderer = this.getWebGLMapRenderer();
   var gl = mapRenderer.getGL();
@@ -151,8 +150,8 @@ ol.renderer.webgl.VectorLayer2.prototype.renderLineStringCollections =
       false, this.modelViewMatrix_);
 
   var buf, dim, i, indexBuffer, indices, lineStringCollection;
-  for (i = 0; i < lineStringCollections.length; ++i) {
-    lineStringCollection = lineStringCollections[i];
+  for (i = 0; i < lineStrings.length; ++i) {
+    lineStringCollection = lineStrings[i].lineStrings;
     buf = lineStringCollection.buf;
     dim = lineStringCollection.dim;
     mapRenderer.bindBuffer(goog.webgl.ARRAY_BUFFER, buf);

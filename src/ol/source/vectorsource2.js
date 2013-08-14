@@ -3,6 +3,14 @@ goog.provide('ol.source.VectorSource2');
 goog.require('ol.geom2.LineStringCollection');
 goog.require('ol.geom2.PointCollection');
 goog.require('ol.source.Source');
+goog.require('ol.style.LineLiteral');
+
+
+/**
+ * @typedef {{lineStrings: ol.geom2.LineStringCollection,
+ *            styles: Array.<ol.style.LineLiteral>}}
+ */
+ol.StyledLineStringCollection;
 
 
 
@@ -29,20 +37,20 @@ ol.source.VectorSource2 = function(options) {
 
   /**
    * @private
-   * @type {Array.<ol.geom2.LineStringCollection>}
+   * @type {Array.<ol.StyledLineStringCollection>}
    */
-  this.lineStringCollections_ = goog.isDef(options.lineStringCollections) ?
-      options.lineStringCollections : [];
+  this.lineStrings_ = goog.isDef(options.lineStrings) ?
+      options.lineStrings : [];
 
 };
 goog.inherits(ol.source.VectorSource2, ol.source.Source);
 
 
 /**
- * @return {Array.<ol.geom2.LineStringCollection>} Line string collections.
+ * @return {Array.<ol.StyledLineStringCollection>} Line strings.
  */
-ol.source.VectorSource2.prototype.getLineStringCollections = function() {
-  return this.lineStringCollections_;
+ol.source.VectorSource2.prototype.getLineStrings = function() {
+  return this.lineStrings_;
 };
 
 
