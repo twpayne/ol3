@@ -359,6 +359,7 @@ ol.renderer.webgl.VectorLayer2.prototype.renderPointCollections =
 
   gl.uniformMatrix4fv(this.pointCollectionLocations_.u_modelViewMatrix, false,
       this.modelViewMatrix_);
+  gl.enableVertexAttribArray(this.pointCollectionLocations_.a_position);
 
   var buf, dim, i, pointCollection;
   for (i = 0; i < pointCollections.length; ++i) {
@@ -366,7 +367,6 @@ ol.renderer.webgl.VectorLayer2.prototype.renderPointCollections =
     buf = pointCollection.buf;
     dim = pointCollection.dim;
     mapRenderer.bindBuffer(goog.webgl.ARRAY_BUFFER, buf);
-    gl.enableVertexAttribArray(this.pointCollectionLocations_.a_position);
     gl.vertexAttribPointer(this.pointCollectionLocations_.a_position, 2,
         goog.webgl.FLOAT, false, 4 * dim, 0);
     gl.uniform4fv(this.pointCollectionLocations_.u_color, [1, 0, 0, 0.75]);
@@ -375,5 +375,7 @@ ol.renderer.webgl.VectorLayer2.prototype.renderPointCollections =
       gl.drawArrays(goog.webgl.POINTS, start / dim, (stop - start) / dim);
     });
   }
+
+  gl.disableVertexAttribArray(this.pointCollectionLocations_.a_position);
 
 };

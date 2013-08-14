@@ -252,6 +252,9 @@ ol.renderer.webgl.TileLayer.prototype.renderFrame =
       }
     }
 
+    gl.disableVertexAttribArray(this.locations_.a_position);
+    gl.disableVertexAttribArray(this.locations_.a_texCoord);
+
     if (allTilesLoaded) {
       this.renderedTileRange_ = tileRange;
       this.renderedFramebufferExtent_ = framebufferExtent;

@@ -577,7 +577,6 @@ ol.renderer.webgl.Map.prototype.renderFrame = function(frameState) {
 
   this.bindBuffer(goog.webgl.ARRAY_BUFFER, this.arrayBuffer_);
 
-  var currentProgram = null;
   var locations;
   for (i = 0, ii = layersArray.length; i < ii; ++i) {
 
@@ -603,38 +602,33 @@ ol.renderer.webgl.Map.prototype.renderFrame = function(frameState) {
     }
 
     var program = this.getProgram(fragmentShader, vertexShader);
-    if (program != currentProgram) {
+    gl.useProgram(program);
 
-      gl.useProgram(program);
-      currentProgram = program;
-
-      if (useColor) {
-        if (goog.isNull(this.colorLocations_)) {
-          locations =
-              new ol.renderer.webgl.map.shader.Color.Locations(gl, program);
-          this.colorLocations_ = locations;
-        } else {
-          locations = this.colorLocations_;
-        }
+    if (useColor) {
+      if (goog.isNull(this.colorLocations_)) {
+        locations =
+            new ol.renderer.webgl.map.shader.Color.Locations(gl, program);
+        this.colorLocations_ = locations;
       } else {
-        if (goog.isNull(this.defaultLocations_)) {
-          locations =
-              new ol.renderer.webgl.map.shader.Default.Locations(gl, program);
-          this.defaultLocations_ = locations;
-        } else {
-          locations = this.defaultLocations_;
-        }
+        locations = this.colorLocations_;
       }
-
-      gl.enableVertexAttribArray(locations.a_position);
-      gl.vertexAttribPointer(
-          locations.a_position, 2, goog.webgl.FLOAT, false, 16, 0);
-      gl.enableVertexAttribArray(locations.a_texCoord);
-      gl.vertexAttribPointer(
-          locations.a_texCoord, 2, goog.webgl.FLOAT, false, 16, 8);
-      gl.uniform1i(locations.u_texture, 0);
-
+    } else {
+      if (goog.isNull(this.defaultLocations_)) {
+        locations =
+            new ol.renderer.webgl.map.shader.Default.Locations(gl, program);
+        this.defaultLocations_ = locations;
+      } else {
+        locations = this.defaultLocations_;
+      }
     }
+
+    gl.enableVertexAttribArray(locations.a_position);
+    gl.vertexAttribPointer(
+        locations.a_position, 2, goog.webgl.FLOAT, false, 16, 0);
+    gl.enableVertexAttribArray(locations.a_texCoord);
+    gl.vertexAttribPointer(
+        locations.a_texCoord, 2, goog.webgl.FLOAT, false, 16, 8);
+    gl.uniform1i(locations.u_texture, 0);
 
     layerRenderer = this.getLayerRenderer(layer);
     gl.uniformMatrix4fv(
@@ -655,6 +649,9 @@ ol.renderer.webgl.Map.prototype.renderFrame = function(frameState) {
     gl.drawArrays(goog.webgl.TRIANGLE_STRIP, 0, 4);
 
   }
+
+  gl.disableVertexAttribArray(locations.a_position);
+  gl.disableVertexAttribArray(locations.a_texCoord);
 
   if (!this.renderedVisible_) {
     goog.style.setElementShown(this.canvas_, true);
