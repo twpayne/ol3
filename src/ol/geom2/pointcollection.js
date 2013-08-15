@@ -35,30 +35,30 @@ ol.geom2.PointCollection = function(buf, opt_dim) {
 
 
 /**
- * @param {number} capacity Capacity.
+ * @param {number} cap Capacity.
  * @param {number=} opt_dim Dimension.
  * @return {ol.geom2.PointCollection} Point collection.
  */
-ol.geom2.PointCollection.createEmpty = function(capacity, opt_dim) {
+ol.geom2.PointCollection.createEmpty = function(cap, opt_dim) {
   var dim = goog.isDef(opt_dim) ? opt_dim : 2;
-  var buf = new ol.structs.Buffer(new Array(capacity * dim), 0);
+  var buf = new ol.structs.Buffer(new Array(cap * dim), 0);
   return new ol.geom2.PointCollection(buf, dim);
 };
 
 
 /**
  * @param {Array.<ol.geom2.Point>} points Unpacked points.
- * @param {number=} opt_capacity Capacity.
+ * @param {number=} opt_cap Capacity.
  * @param {number=} opt_dim Dimension.
  * @return {ol.geom2.PointCollection} Point collection.
  */
-ol.geom2.PointCollection.pack = function(points, opt_capacity, opt_dim) {
+ol.geom2.PointCollection.pack = function(points, opt_cap, opt_dim) {
   var n = points.length;
   var dim = goog.isDef(opt_dim) ? opt_dim :
       n > 0 ? points[0].length : 2;
-  var capacity = goog.isDef(opt_capacity) ? opt_capacity : n * dim;
-  goog.asserts.assert(capacity >= n * dim);
-  var arr = new Array(capacity);
+  var cap = goog.isDef(opt_cap) ? opt_cap : n * dim;
+  goog.asserts.assert(cap >= n * dim);
+  var arr = new Array(cap);
   ol.geom2.packPoints(arr, 0, points, dim);
   var buf = new ol.structs.Buffer(arr, n * dim);
   return new ol.geom2.PointCollection(buf, dim);

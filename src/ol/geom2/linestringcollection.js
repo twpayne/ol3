@@ -42,40 +42,39 @@ ol.geom2.LineStringCollection = function(buf, opt_ends, opt_dim) {
 
 
 /**
- * @param {number} capacity Capacity.
+ * @param {number} cap Capacity.
  * @param {number=} opt_dim Dimension.
  * @return {ol.geom2.LineStringCollection} Line string collection.
  */
-ol.geom2.LineStringCollection.createEmpty = function(capacity, opt_dim) {
+ol.geom2.LineStringCollection.createEmpty = function(cap, opt_dim) {
   var dim = goog.isDef(opt_dim) ? opt_dim : 2;
-  var buf = new ol.structs.Buffer(new Array(capacity * dim), 0);
+  var buf = new ol.structs.Buffer(new Array(cap * dim), 0);
   return new ol.geom2.LineStringCollection(buf, undefined, dim);
 };
 
 
 /**
  * @param {Array.<ol.geom2.LineString>} lineStrings Line strings.
- * @param {number=} opt_capacity Capacity.
+ * @param {number=} opt_cap Capacity.
  * @param {number=} opt_dim Dimension.
  * @return {ol.geom2.LineStringCollection} Line string collection.
  */
-ol.geom2.LineStringCollection.pack =
-    function(lineStrings, opt_capacity, opt_dim) {
+ol.geom2.LineStringCollection.pack = function(lineStrings, opt_cap, opt_dim) {
   var i;
   var n = lineStrings.length;
   var dim = goog.isDef(opt_dim) ? opt_dim :
       n > 0 ? lineStrings[0][0].length : 2;
-  var capacity;
-  if (goog.isDef(opt_capacity)) {
-    capacity = opt_capacity;
+  var cap;
+  if (goog.isDef(opt_cap)) {
+    cap = opt_cap;
   } else {
-    capacity = 0;
+    cap = 0;
     for (i = 0; i < n; ++i) {
-      capacity += lineStrings[i].length;
+      cap += lineStrings[i].length;
     }
   }
-  capacity *= dim;
-  var arr = new Array(capacity);
+  cap *= dim;
+  var arr = new Array(cap);
   /** @type {Object.<string, number>} */
   var ends = {};
   var offset = 0;
@@ -86,7 +85,7 @@ ol.geom2.LineStringCollection.pack =
     offset = ol.geom2.packPoints(arr, offset, lineStrings[i], dim);
     ends[start + ''] = offset;
   }
-  goog.asserts.assert(offset <= capacity);
+  goog.asserts.assert(offset <= cap);
   var buf = new ol.structs.Buffer(arr, offset);
   return new ol.geom2.LineStringCollection(buf, ends, dim);
 };
