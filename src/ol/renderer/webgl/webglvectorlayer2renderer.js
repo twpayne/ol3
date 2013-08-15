@@ -83,7 +83,7 @@ ol.renderer.webgl.VectorLayer2.expandLine_ = function(
   var flags = (ol.webglnew.geometry.LF_OUTLINE_INNER |
                ol.webglnew.geometry.LF_OUTLINE_OUTER |
                (opt_ring ? ol.webglnew.geometry.LF_RING_CLOSED :
-                           ol.webglnew.geometry.LF_LINE_OUTLINE_CAPS));
+                           0));
 
   //
   var result = opt_dest || [];
@@ -325,9 +325,9 @@ ol.renderer.webgl.VectorLayer2.prototype.renderLineStrings =
         locations.PositionN, 2, goog.webgl.FLOAT, false, 12, 48);
     gl.vertexAttribPointer(
         locations.Control, 1, goog.webgl.FLOAT, false, 12, 32);
-    var lineWidth = 1.5;
+    var lineWidth = 10.0;
     var antiAliasing = 1.5;
-    var outlineWidth = 0.001;
+    var outlineWidth = 1.5;
     gl.vertexAttrib2f(
         locations.Style, lineWidth * 0.5 + antiAliasing, outlineWidth * 0.5);
     gl.drawArrays(goog.webgl.TRIANGLES, 0, vertices.length / 3 - 4);
