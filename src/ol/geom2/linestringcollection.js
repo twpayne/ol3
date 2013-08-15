@@ -16,7 +16,6 @@ ol.geom2.LineString;
 
 
 /**
- * This is an internal class that will be removed from the API.
  * @constructor
  * @param {ol.structs.Buffer} buf Buffer.
  * @param {Object.<string, number>=} opt_ends Ends.
@@ -55,7 +54,6 @@ ol.geom2.LineStringCollection.createEmpty = function(capacity, opt_dim) {
 
 
 /**
- * This is an internal function that will be removed from the API.
  * @param {Array.<ol.geom2.LineString>} unpackedLineStrings Unpacked line
  *     strings.
  * @param {number=} opt_capacity Capacity.
