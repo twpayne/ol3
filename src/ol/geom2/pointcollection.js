@@ -47,20 +47,19 @@ ol.geom2.PointCollection.createEmpty = function(capacity, opt_dim) {
 
 
 /**
- * @param {Array.<ol.geom2.Point>} unpackedPoints Unpacked points.
+ * @param {Array.<ol.geom2.Point>} points Unpacked points.
  * @param {number=} opt_capacity Capacity.
  * @param {number=} opt_dim Dimension.
  * @return {ol.geom2.PointCollection} Point collection.
  */
-ol.geom2.PointCollection.pack =
-    function(unpackedPoints, opt_capacity, opt_dim) {
-  var n = unpackedPoints.length;
+ol.geom2.PointCollection.pack = function(points, opt_capacity, opt_dim) {
+  var n = points.length;
   var dim = goog.isDef(opt_dim) ? opt_dim :
-      n > 0 ? unpackedPoints[0].length : 2;
+      n > 0 ? points[0].length : 2;
   var capacity = goog.isDef(opt_capacity) ? opt_capacity : n * dim;
   goog.asserts.assert(capacity >= n * dim);
   var arr = new Array(capacity);
-  ol.geom2.packPoints(arr, 0, unpackedPoints, dim);
+  ol.geom2.packPoints(arr, 0, points, dim);
   var buf = new ol.structs.Buffer(arr, n * dim);
   return new ol.geom2.PointCollection(buf, dim);
 };
