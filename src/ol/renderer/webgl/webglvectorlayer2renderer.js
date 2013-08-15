@@ -307,9 +307,9 @@ ol.renderer.webgl.VectorLayer2.prototype.renderLineStrings =
     dim = lineStringCollection.dim;
     goog.asserts.assert(dim == 2);
     var vertices = [];
-    var ranges = lineStringCollection.ranges;
-    for (var offset in ranges) {
-      var end = ranges[offset];
+    var ends = lineStringCollection.ends;
+    for (var offset in ends) {
+      var end = ends[offset];
       var coords = buf.getArray().slice(offset, end);
       //window.console.log(coords);
       ol.renderer.webgl.VectorLayer2.expandLine_(coords, false, vertices);
