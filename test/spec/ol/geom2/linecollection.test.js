@@ -24,7 +24,7 @@ describe('ol.geom2.LineStringCollection', function() {
     it('packs an empty array', function() {
       var lsc = ol.geom2.LineStringCollection.pack([]);
       expect(lsc.buf.getArray()).to.be.empty();
-      expect(lsc.ranges).to.be.empty();
+      expect(lsc.ends).to.be.empty();
       expect(lsc.dim).to.be(2);
     });
 
@@ -32,7 +32,7 @@ describe('ol.geom2.LineStringCollection', function() {
       var lsc = ol.geom2.LineStringCollection.pack([], 4);
       expect(lsc.buf.getArray()).to.eql(
           [NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN]);
-      expect(lsc.ranges).to.be.empty();
+      expect(lsc.ends).to.be.empty();
       expect(lsc.dim).to.be(2);
     });
 
@@ -41,8 +41,8 @@ describe('ol.geom2.LineStringCollection', function() {
           [[[0, 1], [2, 3], [4, 5]], [[6, 7], [8, 9]]]);
       expect(lsc.buf.getArray()).to.eql([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
       expect(lsc.getCount()).to.be(2);
-      expect(lsc.ranges[0]).to.be(6);
-      expect(lsc.ranges[6]).to.be(10);
+      expect(lsc.ends[0]).to.be(6);
+      expect(lsc.ends[6]).to.be(10);
       expect(lsc.dim).to.be(2);
     });
 
@@ -51,8 +51,8 @@ describe('ol.geom2.LineStringCollection', function() {
           [[[0, 1, 2], [3, 4, 5]], [[6, 7, 8], [9, 10, 11]]]);
       expect(lsc.buf.getArray()).to.eql([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
       expect(lsc.getCount()).to.be(2);
-      expect(lsc.ranges[0]).to.be(6);
-      expect(lsc.ranges[6]).to.be(12);
+      expect(lsc.ends[0]).to.be(6);
+      expect(lsc.ends[6]).to.be(12);
       expect(lsc.dim).to.be(3);
     });
 
@@ -63,8 +63,8 @@ describe('ol.geom2.LineStringCollection', function() {
           [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
       expect(lsc.buf.getArray()).to.have.length(32);
       expect(lsc.getCount()).to.be(2);
-      expect(lsc.ranges[0]).to.be(6);
-      expect(lsc.ranges[6]).to.be(10);
+      expect(lsc.ends[0]).to.be(6);
+      expect(lsc.ends[6]).to.be(10);
       expect(lsc.dim).to.be(2);
     });
 
@@ -106,7 +106,7 @@ describe('ol.geom2.LineStringCollection', function() {
         var offset = lsc.add([[0, 1], [2, 3]]);
         expect(offset).to.be(0);
         expect(lsc.getCount()).to.be(1);
-        expect(lsc.ranges[0]).to.be(4);
+        expect(lsc.ends[0]).to.be(4);
         expect(lsc.dim).to.be(2);
       });
 
@@ -163,8 +163,8 @@ describe('ol.geom2.LineStringCollection', function() {
         var offset2 = lsc.add([[4, 5], [6, 7]]);
         expect(offset2).to.be(4);
         expect(lsc.getCount()).to.be(2);
-        expect(lsc.ranges[0]).to.be(4);
-        expect(lsc.ranges[4]).to.be(8);
+        expect(lsc.ends[0]).to.be(4);
+        expect(lsc.ends[4]).to.be(8);
         expect(lsc.dim).to.be(2);
       });
 
