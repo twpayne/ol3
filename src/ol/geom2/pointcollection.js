@@ -47,7 +47,7 @@ ol.geom2.PointCollection.createEmpty = function(cap, opt_dim) {
 
 
 /**
- * @param {Array.<ol.geom2.Point>} points Unpacked points.
+ * @param {Array.<ol.geom2.Point>} points Points.
  * @param {number=} opt_cap Capacity.
  * @param {number=} opt_dim Dimension.
  * @return {ol.geom2.PointCollection} Point collection.
