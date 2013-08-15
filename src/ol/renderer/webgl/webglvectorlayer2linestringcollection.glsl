@@ -20,7 +20,7 @@ attribute vec2 PositionN;
 attribute float Control;
 
 attribute vec2 Style;
-float lineWidth = Style.x;
+//- float lineWidth = Style.x;
 
 uniform mat4 Transform;
 uniform vec2 PixelScale;
@@ -53,6 +53,8 @@ vec3 transform(vec2 p) {
 
 
 void main(void) {
+
+    float lineWidth = Style.x;
 
     // Apply transform
     vec2 pP = transform(PositionP).xy;
@@ -101,19 +103,18 @@ varying vec2 Surface;
 varying float Invalidator;
 
 varying vec2 v_Style;
-float lineWidth = v_Style.x;
-float outlineWidth = v_Style.y;
+//- float lineWidth = v_Style.x;
+//- float outlineWidth = v_Style.y;
 
 vec4 FillColor = vec4(1.,0.,0.,1.);
 vec4 StrokeColor = vec4(1.,1.,0.,1.);
 
 //uniform vec3 RenderParams;
-//float antiAliasing = RenderParams.x;
-//float gamma = RenderParams.y;
-//float rcpGamma = RenderParams.z;
-const float antiAliasing = 1.5;
-const float gamma = 2.3;
-const float rcpGamma = 1./gamma;
+const vec3 RenderParams = vec3(1.5, 2.3, 1./2.3);
+float antiAliasing = RenderParams.x;
+float gamma = RenderParams.y;
+float rcpGamma = RenderParams.z;
+
 
 
 // ---- Implementation
@@ -134,6 +135,9 @@ vec3 gammaCorrect(vec3 color) {
 void main(void) {
 
     if (Invalidator > 0.0) discard;
+
+    float lineWidth = v_Style.x;
+    float outlineWidth = v_Style.y;
 
     // Determine distance vector from centerpoint (1;1) surface coordinates
     // the outer edge of the surface is located at 1
