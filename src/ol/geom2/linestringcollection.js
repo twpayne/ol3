@@ -54,25 +54,24 @@ ol.geom2.LineStringCollection.createEmpty = function(capacity, opt_dim) {
 
 
 /**
- * @param {Array.<ol.geom2.LineString>} unpackedLineStrings Unpacked line
- *     strings.
+ * @param {Array.<ol.geom2.LineString>} lineStrings Line strings.
  * @param {number=} opt_capacity Capacity.
  * @param {number=} opt_dim Dimension.
  * @return {ol.geom2.LineStringCollection} Line string collection.
  */
 ol.geom2.LineStringCollection.pack =
-    function(unpackedLineStrings, opt_capacity, opt_dim) {
+    function(lineStrings, opt_capacity, opt_dim) {
   var i;
-  var n = unpackedLineStrings.length;
+  var n = lineStrings.length;
   var dim = goog.isDef(opt_dim) ? opt_dim :
-      n > 0 ? unpackedLineStrings[0][0].length : 2;
+      n > 0 ? lineStrings[0][0].length : 2;
   var capacity;
   if (goog.isDef(opt_capacity)) {
     capacity = opt_capacity;
   } else {
     capacity = 0;
     for (i = 0; i < n; ++i) {
-      capacity += unpackedLineStrings[i].length;
+      capacity += lineStrings[i].length;
     }
   }
   capacity *= dim;
@@ -82,9 +81,9 @@ ol.geom2.LineStringCollection.pack =
   var offset = 0;
   var start;
   for (i = 0; i < n; ++i) {
-    goog.asserts.assert(unpackedLineStrings[i].length > 1);
+    goog.asserts.assert(lineStrings[i].length > 1);
     start = offset;
-    offset = ol.geom2.packPoints(arr, offset, unpackedLineStrings[i], dim);
+    offset = ol.geom2.packPoints(arr, offset, lineStrings[i], dim);
     ends[start + ''] = offset;
   }
   goog.asserts.assert(offset <= capacity);
