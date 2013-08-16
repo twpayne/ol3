@@ -330,7 +330,7 @@ ol.renderer.webgl.VectorLayer2.prototype.renderLineStrings =
     var outlineWidth = 1.5;
     gl.vertexAttrib2f(
         locations.Style, lineWidth * 0.5 + antiAliasing, outlineWidth * 0.5);
-    gl.drawArrays(goog.webgl.TRIANGLES, 0, vertices.length / 3 - 4);
+    gl.drawArrays(goog.webgl.TRIANGLE_STRIP, 0, vertices.length / 3 - 4);
   }
 
   gl.disableVertexAttribArray(locations.PositionP);
