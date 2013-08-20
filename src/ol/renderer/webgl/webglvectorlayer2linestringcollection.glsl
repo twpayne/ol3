@@ -8,6 +8,7 @@
 
 
 //! VERTEX
+
 // ---- Configuration
 
 precision mediump float;
@@ -25,74 +26,104 @@ attribute vec2 Style;
 uniform mat4 Transform;
 uniform vec2 PixelScale;
 
+//uniform vec3 RenderParams;
+const float antiAliasing = 1.75; //RenderParams.x;
+
 varying vec2 v_Style;
 varying vec2 Surface;
-varying float Invalidator;
+varying float Invalidate;
 
 // ---- Implementation
 
-float removeHighbits(float x, float valueOfLowest) {
-    return x - floor(x / valueOfLowest) * valueOfLowest;
-}
-float extractHighbits(float x, float valueOfLowest) {
-    return floor(x / valueOfLowest);
+vec2 rotateCw(vec2 p) {
+    return vec2(p.y, -p.x);
 }
 
-float zeroToOne(float f) {
-    return f != 0.0 ? f : 1.0;
+vec3 perspDiv(vec4 p) {
+    return p.xyz / p.w;
 }
 
-vec2 ccwNormal(vec2 p) {
-    return vec2(p.y, -p.x) / zeroToOne(length(p));
+vec2 safeNormalize(vec2 v) {
+    float frob = dot(v, v);
+    return v * (frob > 0.0 ? inversesqrt(frob) : 0.0);
 }
-
-vec3 transform(vec2 p) {
-    vec4 tmp = Transform * vec4(p, 0.0, 1.0);
-    return tmp.xyz / tmp.w;
-}
-
 
 void main(void) {
 
-    float lineWidth = Style.x;
+    // Basic vertex shader operation
+    gl_Position = Transform * vec4(Position0, 0.0, 1.0);
 
-    // Apply transform
-    vec2 pP = transform(PositionP).xy;
-    vec2 p0 = transform(Position0).xy;
-    vec2 pN = transform(PositionN).xy;
+    if (Control == 12.0) {
+        Invalidate = 1.0;
+        return;
+    }
 
-    // Look at two successive edges and determine direction / factor
-    vec2 eP = ccwNormal(p0 - pP);
-    vec2 eN = ccwNormal(pN - p0);
-    vec2 normal = normalize(eP + eN);
+    Invalidate = 0.0;
+    Surface = vec2(0.0, 0.0);
 
-    // Account for mitering
-    float width = lineWidth / zeroToOne(dot(eN, normal));
+    float extent = Style.x * 0.5;
+    float fractStrokeWidth = Style.y;
+    v_Style.x = extent + antiAliasing * 0.5;
+    v_Style.y = fractStrokeWidth * (extent + antiAliasing * 1.5);
 
-    // Decode edge control value to surface coordinates
-    vec2 surface = vec2(extractHighbits(Control, 4.0),
-                        removeHighbits(Control, 4.0));
+    // Done when not at edge, otherwise the above output
+    // provides default values assumed in the code below
+    if (Control == 0.0) return;
 
-    // ...where a special value invalidates the vertex
-    float invalidator = max(surface.y - 2.0, 0.0);
+    // Perform additional transforms
+    vec2 pN = perspDiv(Transform * vec4(PositionN, 0.0, 1.0)).xy;
+    vec2 p0 = perspDiv(gl_Position).xy;
+    vec2 pP = perspDiv(Transform * vec4(PositionP, 0.0, 1.0)).xy;
 
-    // Sign of the locally horizontal surface coordinate
-    // tells us whether to go left or right
-    width *= zeroToOne(surface.x - 1.0);
+    // Determine tangents of adjacent edges and at vertex
+    vec2 tP = safeNormalize(p0-pP);
+    vec2 tN = safeNormalize(pN-p0);
+    vec2 tangent = tP + tN;
 
-    // Transform
-    vec4 vertex = Transform * vec4(Position0, 0.0, 1.0);
-    vertex.xy += width * normal * PixelScale;
+    vec2 displacement = vec2(0.0);
 
-    // Store varyings
-    gl_Position = vertex;
-    Surface = surface;
-    Invalidator = invalidator;
-    v_Style = Style;
+    // Determine extrusion / surface coordinates in tangential direction
+    // (only at start/end of a line strip, indicated via control flags)
+    float ctrl = Control;
+    if (ctrl >= 4.0) {
+        // Vertical edge?
+
+        if (ctrl >= 8.0) {
+            ctrl -= 4.0; // bit removal - or half of it (see below)
+
+            // Tangent is in opposite direction - correect it
+            tangent = -tangent;
+
+            // Displacement towards the outside of the line
+            displacement = (tP - tN) * max(v_Style.y, antiAliasing);
+
+            // Let surface coordinate indicate the edge (can use the
+            // same value for both ends as interpolating towards zero in
+            // all cases - subdivision is inherent)
+            Surface.y = 1.0;
+        }
+
+        // Tangent used as reference for mitering is either in opposite
+        // direction or zero - correct it
+        tP = tangent;
+
+        ctrl -= 4.0; // bit removal - done odd to ease data dependencies
+    }
+
+    // Determine extrusion / surface coordinate in normal directions
+    vec2 normal = normalize(rotateCw(tangent));
+    Surface.x = ctrl * 2.0 - 3.0;
+    float horizExtent = v_Style.x /         // extent (line width / 2)
+            dot(rotateCw(tP), normal) *     // projected along miter
+            Surface.x;                      // sign: left or right
+
+    displacement += horizExtent * normal; 
+    gl_Position.xy += gl_Position.w * displacement * PixelScale;
 }
 
 
 //! FRAGMENT
+
 // ---- Configuration
 
 precision mediump float;
@@ -100,17 +131,17 @@ precision mediump float;
 // ---- Interface
 
 varying vec2 Surface;
-varying float Invalidator;
+varying float Invalidate;
 
 varying vec2 v_Style;
 //- float lineWidth = v_Style.x;
 //- float outlineWidth = v_Style.y;
 
-vec4 FillColor = vec4(1.,0.,0.,1.);
-vec4 StrokeColor = vec4(1.,1.,0.,1.);
+const vec4 FillColor = vec4(1.,0.,0.,1.);
+const vec4 StrokeColor = vec4(1.,1.,0.,1.);
 
 //uniform vec3 RenderParams;
-const vec3 RenderParams = vec3(1.5, 2.3, 1./2.3);
+const vec3 RenderParams = vec3(1.75, 2.3, 1./2.3);
 float antiAliasing = RenderParams.x;
 float gamma = RenderParams.y;
 float rcpGamma = RenderParams.z;
@@ -125,76 +156,74 @@ float blendCoeff(vec2 edge0, vec2 edge1, vec2 x) {
 }
 
 vec3 gammaApply(vec3 color) {
-    return pow(abs(color), vec3(gamma));
+    return pow(clamp(color, 0.0, 1.0), vec3(gamma));
 }
 
 vec3 gammaCorrect(vec3 color) {
-    return pow(abs(color), vec3(rcpGamma));
+    return pow(clamp(color, 0.0, 1.0), vec3(rcpGamma));
 }
+
 
 void main(void) {
 
-    if (Invalidator > 0.0) discard;
+    if (Invalidate > 0.0) discard;
 
-    float lineWidth = v_Style.x;
-    float outlineWidth = v_Style.y;
+    // Distance from center of surface coordinate (keep it this way;
+    // strangely the 'abs' function does not work correctly on all
+    // platforms here)
+    vec2 dist = min(Surface * sign(Surface), 1.0);
 
-    // Determine distance vector from centerpoint (1;1) surface coordinates
-    // the outer edge of the surface is located at 1
-    vec2 dist = min(abs(Surface - vec2(1.0)), 1.0);
+    // Determine thresholds in surface coordinates
+    //
+    // 0.0             1.0
+    // |-----------------|
+    // 
+    // +--- extent ---+
+    //         + aa / 2  :
+    //                   :
+    //           |<------|
+    //           : stroke
+    //           |aa->
+    //           |---|
+    // inner edge min / max
+    // 
+    //              |<-aa|
+    // outer edge min
+    //
+    float extent = v_Style.x; // includes aa/2
+    float outlineWidth = v_Style.y; // scaled in vertex shader
 
-    // Determine surface scale from screen space derivatives
-#ifdef STANDARD_DERIVATIVES
-    vec2 dSurfPixX = dFdx(Surface), dSurfPixY = dFdy(Surface);
-    vec2 scale = vec2(length(vec2(dSurfPixX.x, dSurfPixY.x)),
-                      length(vec2(dSurfPixX.y, dSurfPixY.y)));
+#ifndef STANDARD_DERIVATIVES
+    vec2 negScale = vec2(-1.0 / extent, 
+                         -1.0 / max(outlineWidth, antiAliasing));
 #else
-    vec2 scale = vec2(1.0 / lineWidth);
+    // with this extension can determine the gradient length of
+    // each surface coordinate component in pixels
+    vec2 dSurfPixX = dFdx(Surface), dSurfPixY = dFdy(Surface);
+    vec2 negScale = vec2(-length(vec2(dSurfPixX.x, dSurfPixY.x)),
+                         -length(vec2(dSurfPixX1.y, dSurfPixY.y)));
 #endif
 
-    // Determine surface coordinate thresholds:
-    //
-    // 0.0                                     1.0
-    // ... inside.. - edge =#{ border }#= edge -|
-    //              |<---+-->|<-------+-------->|
-    //              :   \|/  :       \|/        :
-    //              :   /|\  :        |         :
-    vec2 edgeWidth = antiAliasing * scale;
-    //              :        :       /|\        :
-    vec2 outline = outlineWidth * scale;
-    //              :        :        :         :
-    //              :        :        ^<--------|
-    vec2 outerEdgeMin = vec2(1.0) - edgeWidth;
-    //              ^<-------:--------|
-    vec2 innerEdgeMin = outerEdgeMin - outline;
-    //              |--------^
-    vec2 innerEdgeMax = innerEdgeMin + edgeWidth;
-    // When these   ^^^^^^^^^^        ^^^^^^^^^^^ two regions
-    // overlap, the maximum intensity will be below 1.
-    //
-    // Both regions have the same width and provide the input to
-    // the same monotonic function (x=0 for region start).
-    //
-    // => The result will never be blow zero, and
-    // => there will be no jump discontinuities.
-    // => maximum luminance at min(1.0, LineWidth / AntiAliasing)
+    vec2 negAntiAlias = negScale * antiAliasing;
+    vec2 innerEdgeMin = negScale * outlineWidth + vec2(1.0);
+    vec2 innerEdgeMax = innerEdgeMin - negAntiAlias;
+    vec2 outerEdgeMin = negAntiAlias + vec2(1.0);
 
-    // Determine foreground color
-    vec4 color = mix(FillColor, StrokeColor, blendCoeff(innerEdgeMin, innerEdgeMax, dist));
+    // Blend with stroke color (smooth, inner edge)
+    vec4 color = mix(FillColor, StrokeColor,
+                     blendCoeff(innerEdgeMin, innerEdgeMax, dist));
 
-    // Adjust alpha for anti-aliasing on the outer edge
+    // Adjust alpha for edge smoothing (outer edge)
     color.a = color.a * (1.0 - blendCoeff(outerEdgeMin, vec2(1.0), dist));
 
-    // Obviously - no implicit gamma correction happens on most platforms.
-    // See: http://stackoverflow.com/questions/10843321
-    //
-    // This is only half of it - acutually the proper way would require
-    // a finalizing rendering task, so that blending can be performed
-    // in linearized color space.
+    // Gamma correct here (for now - we'd ideally want to blend in 
+    // a linearized color space)
     color.rgb = gammaCorrect(color.rgb);
 
 #ifdef PREMULTIPLY_BY_ALPHA
     color.rgb *= color.a;
 #endif
+
     gl_FragColor = color;
 }
+

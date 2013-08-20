@@ -12,20 +12,6 @@ goog.require('ol.structs.Buffer');
 goog.require('ol.style.LineLiteral');
 
 
-/**
- * @enum {number}
- */
-ol.webglnew.geometry = {
-  LF_LINE: 0,                 // coordinates represent a line
-  LF_RING: 1,                 // coordinates represent a ring
-  LF_OUTLINE_INNER: 4,        // outline left (ccw)      V|  |^
-  LF_OUTLINE_OUTER: 8,        // outline right (ccw)    |V    ^|
-  LF_LINE_OUTLINE_CAPS: 2,    // outline top and bottom
-  LF_RING_CLOSED: 3,          // re-emit first vertex pair
-  LF_OUTLINE_PROPORTIONAL: 16 // needed w/o derivatives
-};
-
-
 /***
  * @typedef {{start: number,
  *            stop: number,
@@ -68,88 +54,6 @@ ol.renderer.webgl.VectorLayer2 = function(mapRenderer, vectorLayer2) {
 
 };
 goog.inherits(ol.renderer.webgl.VectorLayer2, ol.renderer.webgl.Layer);
-
-
-/**
- * @param {Array.<number>} coords Coords.
- * @param {boolean=} opt_ring Ring.
- * @param {Array.<number>=} opt_dest Dest.
- * @private
- * @return {Array.<number>} Expanded line.
- */
-ol.renderer.webgl.VectorLayer2.expandLine_ = function(
-    coords, opt_ring, opt_dest) {
-
-  var flags = (ol.webglnew.geometry.LF_OUTLINE_INNER |
-               ol.webglnew.geometry.LF_OUTLINE_OUTER |
-               (opt_ring ? ol.webglnew.geometry.LF_RING_CLOSED :
-                           0));
-
-  //
-  var result = opt_dest || [];
-  var iLast = coords.length - 2, iFirstSentinel, iLastSentinel;
-
-  var surfInner = 4 - (flags & ol.webglnew.geometry.LF_OUTLINE_INNER ? 4 : 0),
-      surfOuter = 4 + (flags & ol.webglnew.geometry.LF_OUTLINE_OUTER ? 4 : 0),
-      ctrl;
-
-  if (!(flags & ol.webglnew.geometry.LF_RING)) {
-    iFirstSentinel = 0;
-    iLastSentinel = iLast;
-    ctrl = 1 - (flags & ol.webglnew.geometry.LF_LINE_OUTLINE_CAPS ? 1 : 0);
-  } else {
-    iFirstSentinel = iLast;
-    iLastSentinel = 0;
-    ctrl = 1;
-  }
-  var ctrlLast = 2 - ctrl;
-
-  result.push(coords[iFirstSentinel]);
-  result.push(coords[iFirstSentinel + 1]);
-  result.push(3);
-  result.push(coords[iFirstSentinel]);
-  result.push(coords[iFirstSentinel + 1]);
-  result.push(3);
-
-  for (var i = 0; i < iLast; i += 2) {
-
-    result.push(coords[i]);
-    result.push(coords[i + 1]);
-    result.push(ctrl + surfInner);
-    result.push(coords[i]);
-    result.push(coords[i + 1]);
-    result.push(ctrl + surfOuter);
-
-    ctrl = 1;
-  }
-
-  result.push(coords[iLast]);
-  result.push(coords[iLast + 1]);
-  result.push(ctrlLast + surfInner);
-  result.push(coords[iLast]);
-  result.push(coords[iLast + 1]);
-  result.push(ctrlLast + surfOuter);
-
-  if ((flags & ol.webglnew.geometry.LF_RING_CLOSED) ==
-      ol.webglnew.geometry.LF_RING_CLOSED) {
-    result.push(coords[0]);
-    result.push(coords[1]);
-    result.push(ctrl + surfInner);
-    result.push(coords[0]);
-    result.push(coords[1]);
-    result.push(ctrl + surfOuter);
-    iLastSentinel = 2;
-  }
-
-  result.push(coords[iLastSentinel]);
-  result.push(coords[iLastSentinel + 1]);
-  result.push(3);
-  result.push(coords[iLastSentinel]);
-  result.push(coords[iLastSentinel + 1]);
-  result.push(3);
-
-  return result;
-};
 
 
 /**
@@ -306,14 +210,13 @@ ol.renderer.webgl.VectorLayer2.prototype.renderLineStrings =
     buf = lineStringCollection.buf;
     dim = lineStringCollection.dim;
     goog.asserts.assert(dim == 2);
-    var vertices = [];
+    var vertices = [], inputCoords = buf.getArray();
     var ends = lineStringCollection.ends;
     for (var offset in ends) {
       var end = ends[offset];
-      var coords = buf.getArray().slice(offset, end);
-      //window.console.log(coords);
-      ol.renderer.webgl.VectorLayer2.expandLine_(coords, false, vertices);
-      //window.console.log(vertices);
+
+      ol.renderer.webgl.VectorLayer2.expandLineString_(
+          vertices, inputCoords, Number(offset), end, 2);
     }
     var verticiesBuf = new ol.structs.Buffer(vertices);
     mapRenderer.bindBuffer(goog.webgl.ARRAY_BUFFER, verticiesBuf);
@@ -325,11 +228,9 @@ ol.renderer.webgl.VectorLayer2.prototype.renderLineStrings =
         locations.PositionN, 2, goog.webgl.FLOAT, false, 12, 48);
     gl.vertexAttribPointer(
         locations.Control, 1, goog.webgl.FLOAT, false, 12, 32);
-    var lineWidth = 10.0;
-    var antiAliasing = 1.5;
-    var outlineWidth = 1.5;
-    gl.vertexAttrib2f(
-        locations.Style, lineWidth * 0.5 + antiAliasing, outlineWidth * 0.5);
+    var lineWidth = 15.0;
+    var outlineWidth = 0.0;
+    gl.vertexAttrib2f(locations.Style, lineWidth, outlineWidth);
     gl.drawArrays(goog.webgl.TRIANGLE_STRIP, 0, vertices.length / 3 - 4);
   }
 
@@ -384,3 +285,193 @@ ol.renderer.webgl.VectorLayer2.prototype.renderPointCollections =
   gl.disableVertexAttribArray(this.pointCollectionLocations_.a_position);
 
 };
+
+
+/**
+ * Edge control flags as processed by the vertex shader.
+ * @enum {number}
+ * @private
+ */
+ol.renderer.webgl.VectorLayer2.surfaceFlags_ = {
+  NOT_AT_EDGE: 0,
+  EDGE_LEFT: 1,
+  EDGE_RIGHT: 2,
+  LAST_INNER: 4,
+  LAST_OUTER: 8,
+  NO_RENDER: 12
+};
+
+
+/**
+ * @param {Array.<number>} dst Destination array for buffer contents.
+ * @param {Array.<number>} coords Array of packed input coordinates.
+ * @param {number} offset Start index in input array.
+ * @param {number} end End index (exclusive).
+ * @param {number} nDimensions Number of dimensions per coordinate.
+ * @private
+ */
+ol.renderer.webgl.VectorLayer2.expandLineString_ = function(
+    dst, coords, offset, end, nDimensions) {
+
+  var last = end - nDimensions;
+  var i, j, e = offset + nDimensions;
+
+  // Assume ring when coordinates of first and last vertex match
+  var isRing = true;
+  for (i = offset, j = last; i != e; ++i, ++j) {
+    if (coords[i] != coords[j]) {
+      isRing = false;
+      break;
+    }
+  }
+  if (isRing) {
+    end -= nDimensions;
+    ol.renderer.webgl.VectorLayer2.expandLinearRing_(
+        dst, coords, offset, end, nDimensions, nDimensions);
+    return;
+  }
+
+  // Vertex pattern used for lines:
+  // ------------------------------
+  //
+  // L1  R1   L0  R0   L0  R0   L1  R1
+  // ~~~~~~   ======   ------
+  //
+  // LM  RM   LN  RN   LN  RN   LM  RM
+  //          ------   ======   ~~~~~~
+  //
+  // \________|_________/             <- info visible in the
+  //     \________|_________/              shader at specific
+  //          \________|_________/         vertices
+  //               \________|_________/
+  //
+  // Legend:
+  //     ~ Sentinel vertex
+  //     = Terminal vertex, outer
+  //     - Terminal vertex, inner
+  //     - N: Last index, M: Second last index
+  //
+  // Terminal vertices:
+  //     - one of the two adjacent edges is zero
+  //     - sum is the negated actual edge
+  //     - 1st nonzero => start of line
+  //     - 2nd nonzero => end of line
+  //     - difference 1st minus 2nd gives outside direction
+
+  j = offset + nDimensions;
+  e = j + nDimensions;
+  for (i = j; i != e; ++i) dst.push(coords[i]);
+  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.NO_RENDER);
+  for (i = j; i != e; ++i) dst.push(coords[i]);
+  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.NO_RENDER);
+
+  j = offset;
+  e = j + nDimensions;
+  for (i = j; i != e; ++i) dst.push(coords[i]);
+  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.EDGE_LEFT |
+           ol.renderer.webgl.VectorLayer2.surfaceFlags_.LAST_OUTER);
+  for (i = j; i != e; ++i) dst.push(coords[i]);
+  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.EDGE_RIGHT |
+           ol.renderer.webgl.VectorLayer2.surfaceFlags_.LAST_OUTER);
+  for (i = j; i != e; ++i) dst.push(coords[i]);
+  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.EDGE_LEFT |
+           ol.renderer.webgl.VectorLayer2.surfaceFlags_.LAST_INNER);
+  for (i = j; i != e; ++i) dst.push(coords[i]);
+  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.EDGE_RIGHT |
+           ol.renderer.webgl.VectorLayer2.surfaceFlags_.LAST_INNER);
+
+  for (j = offset + nDimensions; j != last; j = e) {
+
+    e = j + nDimensions;
+    for (i = j; i != e; ++i) dst.push(coords[i]);
+    dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.EDGE_LEFT);
+    for (i = j; i != e; ++i) dst.push(coords[i]);
+    dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.EDGE_RIGHT);
+  }
+
+  e = j + nDimensions;
+  for (i = j; i != e; ++i) dst.push(coords[i]);
+  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.EDGE_LEFT |
+           ol.renderer.webgl.VectorLayer2.surfaceFlags_.LAST_INNER);
+  for (i = j; i != e; ++i) dst.push(coords[i]);
+  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.EDGE_RIGHT |
+           ol.renderer.webgl.VectorLayer2.surfaceFlags_.LAST_INNER);
+  for (i = j; i != e; ++i) dst.push(coords[i]);
+  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.EDGE_LEFT |
+           ol.renderer.webgl.VectorLayer2.surfaceFlags_.LAST_OUTER);
+  for (i = j; i != e; ++i) dst.push(coords[i]);
+  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.EDGE_RIGHT |
+           ol.renderer.webgl.VectorLayer2.surfaceFlags_.LAST_OUTER);
+
+  j = last - nDimensions;
+  e = last;
+  for (i = j; i != e; ++i) dst.push(coords[i]);
+  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.NO_RENDER);
+  for (i = j; i != e; ++i) dst.push(coords[i]);
+  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.NO_RENDER);
+};
+
+
+/**
+ * @param {Array.<number>} dst Destination array for buffer contents.
+ * @param {Array.<number>} coords Array of packed input coordinates.
+ * @param {number} offset Start index in input array.
+ * @param {number} end End index (exclusive).
+ * @param {number} stride Index distance of input coordinates.
+ * @param {number} nDimensions Number of dimensions per coordinate.
+ * @param {boolean=} opt_forPolygon When set, will use not create a
+ *     left edge and not emit a redundant vertex for direct rendering
+ *     of triangle strips. Off by default.
+ * @private
+ */
+ol.renderer.webgl.VectorLayer2.expandLinearRing_ = function(
+    dst, coords, offset, end, stride, nDimensions, opt_forPolygon) {
+
+  // Won't need a left edge when using CCW winding for the
+  // outside contours and CW winding for inside contours of
+  // polygons
+  var leftEdge = ! opt_forPolygon ?
+          ol.renderer.webgl.VectorLayer2.surfaceFlags_.EDGE_LEFT :
+          ol.renderer.webgl.VectorLayer2.surfaceFlags_.NOT_AT_EDGE;
+
+  var i, j = end - stride;
+  var e = j + nDimensions;
+
+  // Last coord on start sentinel (for proper miters)
+  for (i = j; i != e; ++i) dst.push(coords[i]);
+  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.NO_RENDER);
+  for (i = j; i != e; ++i) dst.push(coords[i]);
+  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.NO_RENDER);
+
+  // Line string from coordinates
+  for (j = offset; j != end; j += stride) {
+
+    e = j + nDimensions;
+    for (i = j; i != e; ++i) dst.push(coords[i]);
+    dst.push(leftEdge);
+    for (i = j; i != e; ++i) dst.push(coords[i]);
+    dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.EDGE_RIGHT);
+  }
+
+  // Wrap around
+  j = offset;
+  if (! opt_forPolygon) {
+    // Have the wrapped vertex be valid (not a sentinel yet)
+    // in order to close the ring when rendering a strip
+    e = j + nDimensions;
+    for (i = j; i != e; ++i) dst.push(coords[i]);
+    dst.push(leftEdge);
+    for (i = j; i != e; ++i) dst.push(coords[i]);
+    dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.EDGE_RIGHT);
+    j += stride;
+  }
+  // Next (first or second) on end sentinel
+  e = j + nDimensions;
+  for (i = j; i != e; ++i) dst.push(coords[i]);
+  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.NO_RENDER);
+  for (i = j; i != e; ++i) dst.push(coords[i]);
+  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.NO_RENDER);
+
+};
+
+
