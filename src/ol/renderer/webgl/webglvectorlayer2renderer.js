@@ -196,6 +196,8 @@ ol.renderer.webgl.VectorLayer2.prototype.renderLineStrings =
   }
 
   var locations = this.lineStringCollectionLocations_;
+  var antiAliasing = 1.75, gamma = 2.3;
+  gl.uniform3f(locations.RenderParams, antiAliasing, gamma, 1 / gamma);
   gl.uniformMatrix4fv(locations.Transform, false, this.modelViewMatrix_);
   gl.uniform2f(locations.PixelScale,
       2 / framebufferDimension, 2 / framebufferDimension);
@@ -228,9 +230,13 @@ ol.renderer.webgl.VectorLayer2.prototype.renderLineStrings =
         locations.PositionN, 2, goog.webgl.FLOAT, false, 12, 48);
     gl.vertexAttribPointer(
         locations.Control, 1, goog.webgl.FLOAT, false, 12, 32);
-    var lineWidth = 15.0;
-    var outlineWidth = 0.0;
-    gl.vertexAttrib2f(locations.Style, lineWidth, outlineWidth);
+    var lineWidth = 15.0; // pixels
+    var opacity = 255; // 0..255
+    var color = ol.renderer.webgl.VectorLayer2.encodeRGB_(1, 0, 0);
+    var strokeWidth = 0.0; // fractional 0..1-eps
+    var stroke = ol.renderer.webgl.VectorLayer2.encodeRGB_(1, 1, 0);
+    gl.vertexAttrib4f(locations.Style, lineWidth, color,
+                      Math.floor(opacity) + strokeWidth, stroke);
     gl.drawArrays(goog.webgl.TRIANGLE_STRIP, 0, vertices.length / 3 - 4);
   }
 
@@ -284,6 +290,21 @@ ol.renderer.webgl.VectorLayer2.prototype.renderPointCollections =
 
   gl.disableVertexAttribArray(this.pointCollectionLocations_.a_position);
 
+};
+
+
+/**
+ * Encodes an RGB tuple within a sngle float.
+ * @param {number} r Red component 0..1.
+ * @param {number} g Green component 0..1.
+ * @param {number} b Blue component 0..1.
+ * @return {number} Encoded color.
+ * @private
+ */
+ol.renderer.webgl.VectorLayer2.encodeRGB_ = function(r, g, b) {
+  return Math.floor(r * 255) * 256 +
+         Math.floor(g * 255) +
+         Math.floor(b * 255) / 256;
 };
 
 
