@@ -494,5 +494,3 @@ ol.renderer.webgl.VectorLayer2.expandLinearRing_ = function(
   dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.NO_RENDER);
 
 };
-
-
