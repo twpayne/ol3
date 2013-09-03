@@ -50,7 +50,6 @@ app.RotateNorthControl = function(opt_options) {
 
   ol.control.Control.call(this, {
     element: element,
-    map: options.map,
     target: options.target
   });
 
@@ -64,7 +63,7 @@ ol.inherits(app.RotateNorthControl, ol.control.Control);
 
 
 var map = new ol.Map({
-  controls: ol.control.defaults({}, [
+  controls: ol.control.defaults().extend([
     new app.RotateNorthControl()
   ]),
   layers: [

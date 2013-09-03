@@ -6,7 +6,7 @@ goog.require('goog.dom');
 goog.require('goog.dom.TagName');
 goog.require('goog.events');
 goog.require('goog.events.EventType');
-goog.require('ol.animation');
+goog.require('ol.animation.zoom');
 goog.require('ol.control.Control');
 goog.require('ol.css');
 goog.require('ol.easing');
@@ -59,7 +59,6 @@ ol.control.Zoom = function(opt_options) {
 
   goog.base(this, {
     element: element,
-    map: options.map,
     target: options.target
   });
 

@@ -88,7 +88,9 @@ ol.renderer.canvas.VectorLayer = function(mapRenderer, layer) {
       ol.renderer.canvas.VectorLayer.TILECACHE_SIZE);
   goog.events.listen(layer, [
     ol.layer.VectorLayerEventType.ADD,
-    ol.layer.VectorLayerEventType.REMOVE
+    ol.layer.VectorLayerEventType.CHANGE,
+    ol.layer.VectorLayerEventType.REMOVE,
+    ol.layer.VectorLayerEventType.INTENTCHANGE
   ],
   this.handleLayerChange_, false, this);
 
@@ -249,6 +251,7 @@ ol.renderer.canvas.VectorLayer.prototype.getFeaturesForPixel =
     var cachedTile = this.tileCache_.get(key);
     var symbolSizes = cachedTile[1];
     var maxSymbolSize = cachedTile[2];
+    var symbolOffsets = cachedTile[3];
     var halfMaxWidth = maxSymbolSize[0] / 2;
     var halfMaxHeight = maxSymbolSize[1] / 2;
     var locationMin = [location[0] - halfMaxWidth, location[1] - halfMaxHeight];
@@ -264,8 +267,8 @@ ol.renderer.canvas.VectorLayer.prototype.getFeaturesForPixel =
       return;
     }
 
-    var candidate, geom, type, symbolBounds, symbolSize, halfWidth, halfHeight,
-        coordinates, j;
+    var candidate, geom, type, symbolBounds, symbolSize, symbolOffset,
+        halfWidth, halfHeight, uid, coordinates, j;
     for (var id in candidates) {
       candidate = candidates[id];
       geom = candidate.getGeometry();
@@ -274,12 +277,17 @@ ol.renderer.canvas.VectorLayer.prototype.getFeaturesForPixel =
           type === ol.geom.GeometryType.MULTIPOINT) {
         // For points, check if the pixel coordinate is inside the candidate's
         // symbol
-        symbolSize = symbolSizes[goog.getUid(candidate)];
+        uid = goog.getUid(candidate);
+        symbolSize = symbolSizes[uid];
+        symbolOffset = symbolOffsets[uid];
         halfWidth = symbolSize[0] / 2;
         halfHeight = symbolSize[1] / 2;
-        symbolBounds = ol.extent.boundingExtent(
-            [[location[0] - halfWidth, location[1] - halfHeight],
-              [location[0] + halfWidth, location[1] + halfHeight]]);
+        symbolBounds = ol.extent.boundingExtent([
+          [location[0] - halfWidth - symbolOffset[0],
+            location[1] - halfHeight + symbolOffset[1]],
+          [location[0] + halfWidth - symbolOffset[0],
+            location[1] + halfHeight + symbolOffset[1]]
+        ]);
         coordinates = geom.getCoordinates();
         if (!goog.isArray(coordinates[0])) {
           coordinates = [coordinates];
@@ -519,7 +527,8 @@ ol.renderer.canvas.VectorLayer.prototype.renderFrame =
   }
 
   var symbolSizes = sketchCanvasRenderer.getSymbolSizes(),
-      maxSymbolSize = sketchCanvasRenderer.getMaxSymbolSize();
+      maxSymbolSize = sketchCanvasRenderer.getMaxSymbolSize(),
+      symbolOffsets = sketchCanvasRenderer.getSymbolOffsets();
   for (key in tilesToRender) {
     tileCoord = tilesToRender[key];
     if (this.tileCache_.containsKey(key)) {
@@ -531,7 +540,8 @@ ol.renderer.canvas.VectorLayer.prototype.renderFrame =
           (tileRange.minX - tileCoord.x) * tileSize[0],
           (tileCoord.y - tileRange.maxY) * tileSize[1]);
       // TODO: Create an ol.VectorTile subclass of ol.Tile
-      this.tileCache_.set(key, [tile, symbolSizes, maxSymbolSize]);
+      this.tileCache_.set(key,
+          [tile, symbolSizes, maxSymbolSize, symbolOffsets]);
     }
     finalContext.drawImage(tile,
         tileSize[0] * (tileCoord.x - tileRange.minX),

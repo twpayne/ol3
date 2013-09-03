@@ -63,7 +63,7 @@ var styles = [
 ];
 
 var map = new ol.Map({
-  controls: ol.control.defaults({}, [
+  controls: ol.control.defaults().extend([
     new ol.control.MousePosition({
       undefinedHTML: '&nbsp;'
     })

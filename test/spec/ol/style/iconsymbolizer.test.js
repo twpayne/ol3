@@ -1,71 +1,5 @@
 goog.provide('ol.test.style.Icon');
 
-describe('ol.style.IconLiteral', function() {
-
-  describe('#equals()', function() {
-
-    it('identifies equal literals', function() {
-      var literal = new ol.style.IconLiteral({
-        height: 10,
-        width: 20,
-        opacity: 1,
-        rotation: 0.1,
-        url: 'http://example.com/1.png'
-      });
-      var equalLiteral = new ol.style.IconLiteral({
-        height: 10,
-        width: 20,
-        opacity: 1,
-        rotation: 0.1,
-        url: 'http://example.com/1.png'
-      });
-      var differentLiteral1 = new ol.style.IconLiteral({
-        height: 11,
-        width: 20,
-        opacity: 1,
-        rotation: 0.1,
-        url: 'http://example.com/1.png'
-      });
-      var differentLiteral2 = new ol.style.IconLiteral({
-        height: 10,
-        width: 2,
-        opacity: 1,
-        rotation: 0.1,
-        url: 'http://example.com/1.png'
-      });
-      var differentLiteral3 = new ol.style.IconLiteral({
-        height: 10,
-        width: 20,
-        opacity: 0.5,
-        rotation: 0.1,
-        url: 'http://example.com/1.png'
-      });
-      var differentLiteral4 = new ol.style.IconLiteral({
-        height: 10,
-        width: 20,
-        opacity: 1,
-        rotation: 0.2,
-        url: 'http://example.com/1.png'
-      });
-      var differentLiteral5 = new ol.style.IconLiteral({
-        height: 10,
-        width: 20,
-        opacity: 1,
-        rotation: 0.1,
-        url: 'http://example.com/2.png'
-      });
-      expect(literal.equals(equalLiteral)).to.be(true);
-      expect(literal.equals(differentLiteral1)).to.be(false);
-      expect(literal.equals(differentLiteral2)).to.be(false);
-      expect(literal.equals(differentLiteral3)).to.be(false);
-      expect(literal.equals(differentLiteral4)).to.be(false);
-      expect(literal.equals(differentLiteral5)).to.be(false);
-    });
-
-  });
-
-});
-
 describe('ol.style.Icon', function() {
 
   describe('constructor', function() {
@@ -76,7 +10,9 @@ describe('ol.style.Icon', function() {
         width: 20,
         opacity: 1,
         rotation: 0.1,
-        url: 'http://example.com/1.png'
+        url: 'http://example.com/1.png',
+        xOffset: 10,
+        yOffset: 15
       });
       expect(symbolizer).to.be.a(ol.style.Icon);
     });
@@ -87,7 +23,9 @@ describe('ol.style.Icon', function() {
         width: ol.expr.parse('20'),
         opacity: ol.expr.parse('1'),
         rotation: ol.expr.parse('0.1'),
-        url: ol.expr.parse('"http://example.com/1.png"')
+        url: ol.expr.parse('"http://example.com/1.png"'),
+        xOffset: ol.expr.parse('xOffset'),
+        yOffset: ol.expr.parse('yOffset')
       });
       expect(symbolizer).to.be.a(ol.style.Icon);
     });
@@ -102,7 +40,9 @@ describe('ol.style.Icon', function() {
         width: ol.expr.parse('widthAttr'),
         opacity: ol.expr.parse('opacityAttr'),
         rotation: ol.expr.parse('rotationAttr'),
-        url: ol.expr.parse('urlAttr')
+        url: ol.expr.parse('urlAttr'),
+        xOffset: ol.expr.parse('xOffset'),
+        yOffset: ol.expr.parse('yOffset')
       });
 
       var feature = new ol.Feature({
@@ -110,7 +50,10 @@ describe('ol.style.Icon', function() {
         widthAttr: 0.42,
         opacityAttr: 0.5,
         rotationAttr: 123,
-        urlAttr: 'http://example.com/1.png'
+        urlAttr: 'http://example.com/1.png',
+        xOffset: 20,
+        yOffset: 30,
+        geometry: new ol.geom.Point([1, 2])
       });
 
       var literal = symbolizer.createLiteral(feature);
@@ -119,6 +62,8 @@ describe('ol.style.Icon', function() {
       expect(literal.width).to.be(.42);
       expect(literal.opacity).to.be(0.5);
       expect(literal.rotation).to.be(123);
+      expect(literal.xOffset).to.be(20);
+      expect(literal.yOffset).to.be(30);
       expect(literal.url).to.be('http://example.com/1.png');
     });
 
@@ -128,29 +73,154 @@ describe('ol.style.Icon', function() {
         width: ol.expr.parse('20'),
         opacity: ol.expr.parse('1'),
         rotation: ol.expr.parse('0.1'),
+        xOffset: ol.expr.parse('10'),
+        yOffset: ol.expr.parse('20'),
         url: ol.expr.parse('"http://example.com/1.png"')
       });
 
-      var literal = symbolizer.createLiteral();
+      var literal = symbolizer.createLiteral(ol.geom.GeometryType.POINT);
       expect(literal).to.be.a(ol.style.IconLiteral);
       expect(literal.height).to.be(10);
       expect(literal.width).to.be(20);
       expect(literal.opacity).to.be(1);
       expect(literal.rotation).to.be(0.1);
+      expect(literal.xOffset).to.be(10);
+      expect(literal.yOffset).to.be(20);
       expect(literal.url).to.be('http://example.com/1.png');
     });
 
-    it('applies default type if none provided', function() {
+    it('applies default opacity if none provided', function() {
       var symbolizer = new ol.style.Icon({
-        height: ol.expr.parse('10'),
-        width: ol.expr.parse('20'),
-        url: ol.expr.parse('"http://example.com/1.png"')
+        height: 10,
+        width: 20,
+        url: 'http://example.com/1.png'
       });
 
-      var literal = symbolizer.createLiteral();
+      var literal = symbolizer.createLiteral(ol.geom.GeometryType.POINT);
       expect(literal).to.be.a(ol.style.IconLiteral);
       expect(literal.opacity).to.be(1);
+    });
+
+    it('applies default rotation if none provided', function() {
+      var symbolizer = new ol.style.Icon({
+        height: 10,
+        width: 20,
+        url: 'http://example.com/1.png'
+      });
+
+      var literal = symbolizer.createLiteral(ol.geom.GeometryType.POINT);
+      expect(literal).to.be.a(ol.style.IconLiteral);
       expect(literal.rotation).to.be(0);
+    });
+
+    it('casts opacity to number', function() {
+      var symbolizer = new ol.style.Icon({
+        opacity: ol.expr.parse('opacity'),
+        height: 10,
+        width: 20,
+        url: 'http://example.com/1.png'
+      });
+
+      var feature = new ol.Feature({
+        opacity: '0.53',
+        geometry: new ol.geom.Point([1, 2])
+      });
+
+      var literal = symbolizer.createLiteral(feature);
+      expect(literal).to.be.a(ol.style.IconLiteral);
+      expect(literal.opacity).to.be(0.53);
+    });
+
+    it('casts width to number', function() {
+      var symbolizer = new ol.style.Icon({
+        width: ol.expr.parse('width'),
+        height: 10,
+        url: 'http://example.com/1.png'
+      });
+
+      var feature = new ol.Feature({
+        width: '42',
+        geometry: new ol.geom.Point([1, 2])
+      });
+
+      var literal = symbolizer.createLiteral(feature);
+      expect(literal).to.be.a(ol.style.IconLiteral);
+      expect(literal.width).to.be(42);
+    });
+
+    it('casts height to number', function() {
+      var symbolizer = new ol.style.Icon({
+        height: ol.expr.parse('height'),
+        width: 10,
+        url: 'http://example.com/1.png'
+      });
+
+      var feature = new ol.Feature({
+        height: '42',
+        geometry: new ol.geom.Point([1, 2])
+      });
+
+      var literal = symbolizer.createLiteral(feature);
+      expect(literal).to.be.a(ol.style.IconLiteral);
+      expect(literal.height).to.be(42);
+    });
+
+    it('applies default xOffset if none', function() {
+      var symbolizer = new ol.style.Icon({
+        height: 10,
+        width: 20,
+        url: 'http://example.com/1.png'
+      });
+
+      var literal = symbolizer.createLiteral(ol.geom.GeometryType.POINT);
+      expect(literal).to.be.a(ol.style.IconLiteral);
+      expect(literal.xOffset).to.be(0);
+    });
+
+    it('casts xOffset to number', function() {
+      var symbolizer = new ol.style.Icon({
+        xOffset: ol.expr.parse('xOffset'),
+        width: 10,
+        url: 'http://example.com/1.png'
+      });
+
+      var feature = new ol.Feature({
+        xOffset: '42',
+        geometry: new ol.geom.Point([1, 2])
+      });
+
+      var literal = symbolizer.createLiteral(feature);
+      expect(literal).to.be.a(ol.style.IconLiteral);
+      expect(literal.xOffset).to.be(42);
+    });
+
+    it('applies default yOffset if none', function() {
+      var symbolizer = new ol.style.Icon({
+        height: 10,
+        width: 20,
+        url: 'http://example.com/1.png'
+      });
+
+      var literal = symbolizer.createLiteral(ol.geom.GeometryType.POINT);
+      expect(literal).to.be.a(ol.style.IconLiteral);
+      expect(literal.yOffset).to.be(0);
+    });
+
+    it('casts yOffset to number', function() {
+      var symbolizer = new ol.style.Icon({
+        yOffset: ol.expr.parse('yOffset'),
+        width: 10,
+        url: 'http://example.com/1.png'
+      });
+
+      var feature = new ol.Feature({
+        yOffset: '42',
+        geometry: new ol.geom.Point([1, 2])
+      });
+
+      var literal = symbolizer.createLiteral(feature);
+      expect(literal).to.be.a(ol.style.IconLiteral);
+      expect(literal.yOffset).to.be(42);
     });
 
   });
@@ -397,5 +467,7 @@ goog.require('goog.asserts.AssertionError');
 goog.require('ol.Feature');
 goog.require('ol.expr');
 goog.require('ol.expr.Literal');
+goog.require('ol.geom.GeometryType');
+goog.require('ol.geom.Point');
 goog.require('ol.style.Icon');
 goog.require('ol.style.IconLiteral');

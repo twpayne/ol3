@@ -1,13 +1,14 @@
 goog.provide('ol.geom.SharedVertices');
 
 goog.require('goog.asserts');
-goog.require('ol.geom.Vertex');
-goog.require('ol.geom.VertexArray');
+goog.require('ol.Coordinate');
+goog.require('ol.CoordinateArray');
+goog.require('ol.geom'); // TODO: remove this when #958 is addressed
 
 
 /**
  * @typedef {{dimension: (number),
- *            offset: (ol.geom.Vertex|undefined)}}
+ *            offset: (ol.Coordinate|undefined)}}
  */
 ol.geom.SharedVerticesOptions;
 
@@ -60,7 +61,7 @@ ol.geom.SharedVertices = function(opt_options) {
 
 /**
  * Adds a vertex array to the shared coordinate array.
- * @param {ol.geom.VertexArray} vertices Array of vertices.
+ * @param {ol.CoordinateArray} vertices Array of vertices.
  * @return {number} Index used to reference the added vertex array.
  */
 ol.geom.SharedVertices.prototype.add = function(vertices) {
@@ -71,14 +72,9 @@ ol.geom.SharedVertices.prototype.add = function(vertices) {
   var vertex, index;
   for (var i = 0; i < count; ++i) {
     vertex = vertices[i];
-    goog.asserts.assert(vertex.length == dimension);
-    if (!offset) {
-      Array.prototype.push.apply(this.coordinates, vertex);
-    } else {
-      index = start + (i * dimension);
-      for (var j = 0; j < dimension; ++j) {
-        this.coordinates[index + j] = vertex[j] - offset[j];
-      }
+    index = start + (i * dimension);
+    for (var j = 0; j < dimension; ++j) {
+      this.coordinates[index + j] = vertex[j] - (offset ? offset[j] : 0);
     }
   }
   var length = this.starts_.push(start);
