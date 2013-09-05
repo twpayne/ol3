@@ -5,7 +5,7 @@ goog.require('ol.control.MousePosition');
 goog.require('ol.control.defaults');
 goog.require('ol.geom2.LineStringCollection');
 goog.require('ol.geom2.PointCollection');
-goog.require('ol.layer.TileLayer');
+goog.require('ol.layer.Tile');
 goog.require('ol.layer.VectorLayer2');
 goog.require('ol.source.OSM');
 goog.require('ol.source.VectorSource2');
@@ -48,7 +48,7 @@ var map = new ol.Map({
     })
   ]),
   layers: [
-    new ol.layer.TileLayer({
+    new ol.layer.Tile({
       source: new ol.source.OSM()
     }),
     new ol.layer.VectorLayer2({

@@ -5,7 +5,7 @@ goog.require('ol.View2D');
 goog.require('ol.control.ScaleLine');
 goog.require('ol.control.ScaleLineUnits');
 goog.require('ol.control.defaults');
-goog.require('ol.layer.TileLayer');
+goog.require('ol.layer.Tile');
 goog.require('ol.proj');
 goog.require('ol.source.TiledWMS');
 
@@ -17,7 +17,7 @@ var projection = ol.proj.configureProj4jsProjection({
 
 var extent = [420000, 900000, 30000, 350000];
 var layers = [
-  new ol.layer.TileLayer({
+  new ol.layer.Tile({
     source: new ol.source.TiledWMS({
       url: 'http://wms.geo.admin.ch/',
       crossOrigin: 'anonymous',
@@ -34,7 +34,7 @@ var layers = [
       extent: extent
     })
   }),
-  new ol.layer.TileLayer({
+  new ol.layer.Tile({
     source: new ol.source.TiledWMS({
       url: 'http://wms.geo.admin.ch/',
       crossOrigin: 'anonymous',
