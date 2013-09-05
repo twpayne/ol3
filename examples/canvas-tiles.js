@@ -3,7 +3,7 @@ goog.require('ol.RendererHints');
 goog.require('ol.View2D');
 goog.require('ol.layer.Tile');
 goog.require('ol.proj');
-goog.require('ol.source.DebugTileSource');
+goog.require('ol.source.DebugTile');
 goog.require('ol.source.OSM');
 goog.require('ol.tilegrid.XYZ');
 
@@ -14,7 +14,7 @@ var map = new ol.Map({
       source: new ol.source.OSM()
     }),
     new ol.layer.Tile({
-      source: new ol.source.DebugTileSource({
+      source: new ol.source.DebugTile({
         projection: 'EPSG:3857',
         tileGrid: new ol.tilegrid.XYZ({
           maxZoom: 22
