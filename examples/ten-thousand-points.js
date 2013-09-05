@@ -8,7 +8,7 @@ goog.require('ol.geom2.PointCollection');
 goog.require('ol.layer.Tile');
 goog.require('ol.layer.Vector2');
 goog.require('ol.source.OSM');
-goog.require('ol.source.VectorSource2');
+goog.require('ol.source.Vector2');
 
 
 // WARNING
@@ -52,7 +52,7 @@ var map = new ol.Map({
       source: new ol.source.OSM()
     }),
     new ol.layer.Vector2({
-      source: new ol.source.VectorSource2({
+      source: new ol.source.Vector2({
         lineStringCollections: [lineStringCollection],
         projection: 'EPSG:3857',
         pointCollections: [pointCollection]
