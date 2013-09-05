@@ -10,8 +10,7 @@ goog.require('ol.Collection');
 goog.require('ol.CollectionEvent');
 goog.require('ol.CollectionEventType');
 goog.require('ol.Object');
-goog.require('ol.layer.Layer');
-goog.require('ol.layer.LayerBase');
+goog.require('ol.layer.Base');
 
 
 /**
@@ -25,7 +24,7 @@ ol.layer.GroupProperty = {
 
 /**
  * @constructor
- * @extends {ol.layer.LayerBase}
+ * @extends {ol.layer.Base}
  * @param {ol.layer.GroupOptions=} opt_options Layer options.
  */
 ol.layer.Group = function(opt_options) {
@@ -63,7 +62,7 @@ ol.layer.Group = function(opt_options) {
   this.setLayers(layers);
 
 };
-goog.inherits(ol.layer.Group, ol.layer.LayerBase);
+goog.inherits(ol.layer.Group, ol.layer.Base);
 
 
 /**
@@ -123,7 +122,7 @@ ol.layer.Group.prototype.handleLayersChanged_ = function(event) {
  * @private
  */
 ol.layer.Group.prototype.handleLayersAdd_ = function(collectionEvent) {
-  var layer = /** @type {ol.layer.LayerBase} */ (collectionEvent.getElement());
+  var layer = /** @type {ol.layer.Base} */ (collectionEvent.getElement());
   this.listenerKeys_[goog.getUid(layer).toString()] = goog.events.listen(
       layer, goog.events.EventType.CHANGE, this.handleLayerChange, false,
       this);
@@ -136,7 +135,7 @@ ol.layer.Group.prototype.handleLayersAdd_ = function(collectionEvent) {
  * @private
  */
 ol.layer.Group.prototype.handleLayersRemove_ = function(collectionEvent) {
-  var layer = /** @type {ol.layer.LayerBase} */ (collectionEvent.getElement());
+  var layer = /** @type {ol.layer.Base} */ (collectionEvent.getElement());
   var key = goog.getUid(layer).toString();
   goog.events.unlistenByKey(this.listenerKeys_[key]);
   delete this.listenerKeys_[key];
