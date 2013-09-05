@@ -9,14 +9,14 @@ goog.require('ol.TileRange');
 goog.require('ol.TileUrlFunction');
 goog.require('ol.extent');
 goog.require('ol.proj');
-goog.require('ol.source.ImageTileSource');
+goog.require('ol.source.ImageTile');
 goog.require('ol.tilegrid.XYZ');
 
 
 
 /**
  * @constructor
- * @extends {ol.source.ImageTileSource}
+ * @extends {ol.source.ImageTile}
  * @param {ol.source.BingMapsOptions} options Bing Maps options.
  */
 ol.source.BingMaps = function(options) {
@@ -48,7 +48,7 @@ ol.source.BingMaps = function(options) {
   }, goog.bind(this.handleImageryMetadataResponse, this));
 
 };
-goog.inherits(ol.source.BingMaps, ol.source.ImageTileSource);
+goog.inherits(ol.source.BingMaps, ol.source.ImageTile);
 
 
 /**

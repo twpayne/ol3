@@ -11,7 +11,7 @@ goog.require('ol.TileUrlFunction');
 goog.require('ol.TileUrlFunctionType');
 goog.require('ol.extent');
 goog.require('ol.proj');
-goog.require('ol.source.ImageTileSource');
+goog.require('ol.source.ImageTile');
 goog.require('ol.tilegrid.WMTS');
 
 
@@ -27,7 +27,7 @@ ol.source.WMTSRequestEncoding = {
 
 /**
  * @constructor
- * @extends {ol.source.ImageTileSource}
+ * @extends {ol.source.ImageTile}
  * @param {ol.source.WMTSOptions} options WMTS options.
  */
 ol.source.WMTS = function(options) {
@@ -163,7 +163,7 @@ ol.source.WMTS = function(options) {
   });
 
 };
-goog.inherits(ol.source.WMTS, ol.source.ImageTileSource);
+goog.inherits(ol.source.WMTS, ol.source.ImageTile);
 
 
 /**

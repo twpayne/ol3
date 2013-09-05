@@ -75,7 +75,7 @@ ol.TileUrlFunction.createFromTileUrlFunctions = function(tileUrlFunctions) {
 /**
  * @param {string} baseUrl Base URL (may have query data).
  * @param {Object.<string,*>} params to encode in the url.
- * @param {function(this: ol.source.ImageTileSource, string, Object.<string,*>,
+ * @param {function(this: ol.source.ImageTile, string, Object.<string,*>,
  *     ol.Extent, ol.Size, ol.Projection)} paramsFunction params function.
  * @return {ol.TileUrlFunctionType} Tile URL function.
  */
