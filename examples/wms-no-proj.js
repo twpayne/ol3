@@ -7,12 +7,12 @@ goog.require('ol.View2D');
 goog.require('ol.layer.Image');
 goog.require('ol.layer.Tile');
 goog.require('ol.source.SingleImageWMS');
-goog.require('ol.source.TiledWMS');
+goog.require('ol.source.TileWMS');
 
 
 var layers = [
   new ol.layer.Tile({
-    source: new ol.source.TiledWMS({
+    source: new ol.source.TileWMS({
       attributions: [new ol.Attribution({
         html: '&copy; ' +
             '<a href="http://www.geo.admin.ch/internet/geoportal/' +
