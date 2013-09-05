@@ -6,7 +6,7 @@ goog.require('ol.control.defaults');
 goog.require('ol.geom2.LineStringCollection');
 goog.require('ol.geom2.PointCollection');
 goog.require('ol.layer.Tile');
-goog.require('ol.layer.VectorLayer2');
+goog.require('ol.layer.Vector2');
 goog.require('ol.source.OSM');
 goog.require('ol.source.VectorSource2');
 
@@ -51,7 +51,7 @@ var map = new ol.Map({
     new ol.layer.Tile({
       source: new ol.source.OSM()
     }),
-    new ol.layer.VectorLayer2({
+    new ol.layer.Vector2({
       source: new ol.source.VectorSource2({
         lineStringCollections: [lineStringCollection],
         projection: 'EPSG:3857',
