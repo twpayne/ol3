@@ -5,7 +5,7 @@ goog.require('ol.animation.bounce');
 goog.require('ol.animation.pan');
 goog.require('ol.animation.rotate');
 goog.require('ol.easing');
-goog.require('ol.layer.TileLayer');
+goog.require('ol.layer.Tile');
 goog.require('ol.proj');
 goog.require('ol.source.OSM');
 
@@ -25,7 +25,7 @@ var view = new ol.View2D({
 
 var map = new ol.Map({
   layers: [
-    new ol.layer.TileLayer({
+    new ol.layer.Tile({
       preload: 4,
       source: new ol.source.OSM()
     })
