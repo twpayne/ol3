@@ -325,4 +325,3 @@ ol.renderer.webgl.BatchRenderer.glBuffer_ = function(gl, target, data) {
  * @private
  */
 ol.renderer.webgl.BatchRenderer.EMPTY_ARRAY_ = [];
-

@@ -112,4 +112,3 @@ ol.renderer.webgl.Render.Parameter = {
    */
   GAMMA: 4
 };
-

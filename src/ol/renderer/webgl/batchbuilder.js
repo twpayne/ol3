@@ -1090,4 +1090,3 @@ ol.renderer.webgl.BatchBuilder.prototype.emitConfigure_ =
   this.control_.push(this.currentRender_);
   this.control_.push(this.vertexBufferOffset_ * 4);
 };
-

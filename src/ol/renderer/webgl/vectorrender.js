@@ -70,4 +70,3 @@ ol.renderer.webgl.VectorRender.prototype.setUniforms =
       pretranslation[0], pretranslation[1],
       pretranslation[3], pretranslation[4]);
 };
-

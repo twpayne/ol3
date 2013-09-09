@@ -88,4 +88,3 @@ ol.renderer.webgl.Batch.ControlStream.RenderType = {
    */
   POLYGONS: 1
 };
-

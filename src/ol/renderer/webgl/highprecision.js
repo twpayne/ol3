@@ -84,4 +84,3 @@ ol.renderer.webgl.highPrecision.tmpMatrix_ = new Array(16);
  * @private
  */
 ol.renderer.webgl.highPrecision.tmpVector_ = new Array(4);
-
