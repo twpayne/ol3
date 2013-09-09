@@ -2,6 +2,7 @@
 goog.provide('ol.renderer.webgl.highPrecision');
 
 goog.require('goog.vec.Mat4');
+goog.require('goog.vec.Vec3');
 
 
 /**

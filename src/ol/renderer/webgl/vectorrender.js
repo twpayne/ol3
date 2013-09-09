@@ -1,5 +1,6 @@
 
 goog.provide('ol.renderer.webgl.VectorRender');
+goog.require('goog.webgl');
 goog.require('ol.renderer.webgl.Render');
 
 // TODO Make abstract and create subclasses for lines and polygons
