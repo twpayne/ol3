@@ -4,9 +4,14 @@ goog.require('ol.webgl.shader');
 /**
  * @constructor
  * @extends {ol.webgl.shader.Fragment}
+ * @param {WebGLRenderingContext=} opt_gl GL.
  */
-ol.renderer.webgl.tilelayer.shader.Fragment = function() {
-  goog.base(this, ol.renderer.webgl.tilelayer.shader.Fragment.SOURCE);
+ol.renderer.webgl.tilelayer.shader.Fragment = function(opt_gl) {
+  var source = ol.renderer.webgl.tilelayer.shader.Fragment.SOURCE;
+  if (goog.isDef(opt_gl)) {
+    source = ol.renderer.webgl.tilelayer.shader.sourcePreamble_(opt_gl) + source;
+  }
+  goog.base(this, source);
 };
 goog.inherits(ol.renderer.webgl.tilelayer.shader.Fragment, ol.webgl.shader.Fragment);
 goog.addSingletonGetter(ol.renderer.webgl.tilelayer.shader.Fragment);
@@ -14,7 +19,7 @@ goog.addSingletonGetter(ol.renderer.webgl.tilelayer.shader.Fragment);
  * @const
  * @type {string}
  */
-ol.renderer.webgl.tilelayer.shader.Fragment.DEBUG_SOURCE = 'precision mediump float;\n//! NAMESPACE=ol.renderer.webgl.tilelayer.shader\n//! CLASS=ol.renderer.webgl.tilelayer.shader.\n\n\n//! COMMON\nvarying vec2 v_texCoord;\n\n\n//! FRAGMENT\nuniform sampler2D u_texture;\n\nvoid main(void) {\n  gl_FragColor = texture2D(u_texture, v_texCoord);\n}\n\n';
+ol.renderer.webgl.tilelayer.shader.Fragment.DEBUG_SOURCE = '//! NAMESPACE=ol.renderer.webgl.tilelayer.shader\n//! CLASS=ol.renderer.webgl.tilelayer.shader.\n\n\n//! COMMON\nprecision mediump float;\n\nvarying vec2 v_texCoord;\n\n\n//! FRAGMENT\nuniform sampler2D u_texture;\n\nvoid main(void) {\n  gl_FragColor = texture2D(u_texture, v_texCoord);\n}\n\n';
 /**
  * @const
  * @type {string}
@@ -30,9 +35,14 @@ ol.renderer.webgl.tilelayer.shader.Fragment.SOURCE = goog.DEBUG ?
 /**
  * @constructor
  * @extends {ol.webgl.shader.Vertex}
+ * @param {WebGLRenderingContext=} opt_gl GL.
  */
-ol.renderer.webgl.tilelayer.shader.Vertex = function() {
-  goog.base(this, ol.renderer.webgl.tilelayer.shader.Vertex.SOURCE);
+ol.renderer.webgl.tilelayer.shader.Vertex = function(opt_gl) {
+  var source = ol.renderer.webgl.tilelayer.shader.Vertex.SOURCE;
+  if (goog.isDef(opt_gl)) {
+    source = ol.renderer.webgl.tilelayer.shader.sourcePreamble_(opt_gl) + source;
+  }
+  goog.base(this, source);
 };
 goog.inherits(ol.renderer.webgl.tilelayer.shader.Vertex, ol.webgl.shader.Vertex);
 goog.addSingletonGetter(ol.renderer.webgl.tilelayer.shader.Vertex);
@@ -40,12 +50,12 @@ goog.addSingletonGetter(ol.renderer.webgl.tilelayer.shader.Vertex);
  * @const
  * @type {string}
  */
-ol.renderer.webgl.tilelayer.shader.Vertex.DEBUG_SOURCE = '//! NAMESPACE=ol.renderer.webgl.tilelayer.shader\n//! CLASS=ol.renderer.webgl.tilelayer.shader.\n\n\n//! COMMON\nvarying vec2 v_texCoord;\n\n\n//! VERTEX\nattribute vec2 a_position;\nattribute vec2 a_texCoord;\nuniform vec4 u_tileOffset;\n\nvoid main(void) {\n  gl_Position = vec4(a_position * u_tileOffset.xy + u_tileOffset.zw, 0., 1.);\n  v_texCoord = a_texCoord;\n}\n\n\n';
+ol.renderer.webgl.tilelayer.shader.Vertex.DEBUG_SOURCE = '//! NAMESPACE=ol.renderer.webgl.tilelayer.shader\n//! CLASS=ol.renderer.webgl.tilelayer.shader.\n\n\n//! COMMON\nprecision mediump float;\n\nvarying vec2 v_texCoord;\n\n\n//! VERTEX\nattribute vec2 a_position;\nattribute vec2 a_texCoord;\nuniform vec4 u_tileOffset;\n\nvoid main(void) {\n  gl_Position = vec4(a_position * u_tileOffset.xy + u_tileOffset.zw, 0., 1.);\n  v_texCoord = a_texCoord;\n}\n\n\n';
 /**
  * @const
  * @type {string}
  */
-ol.renderer.webgl.tilelayer.shader.Vertex.OPTIMIZED_SOURCE = 'varying vec2 a;attribute vec2 c,d;uniform vec4 b;void main(){gl_Position=vec4(c*b.xy+b.zw,0,1);a=d;}';
+ol.renderer.webgl.tilelayer.shader.Vertex.OPTIMIZED_SOURCE = 'precision mediump float;varying vec2 a;attribute vec2 c,d;uniform vec4 b;void main(){gl_Position=vec4(c*b.xy+b.zw,0,1);a=d;}';
 /**
  * @const
  * @type {string}
@@ -79,4 +89,18 @@ ol.renderer.webgl.tilelayer.shader.Locations = function(gl, program) {
    */
   this.a_texCoord = gl.getAttribLocation(
       program, goog.DEBUG ? 'a_texCoord' : 'd');
+};
+/**
+ * Generates a source preamble from the expressions in JSCONST
+ * directives.
+ * We have the rendering context passed in to allow querying
+ * extensions and context attributes.
+ *
+ * @private
+ * @param {WebGLRenderingContext} gl GL.
+ * @return {string} Shader source preamble.
+ */
+ol.renderer.webgl.tilelayer.shader.sourcePreamble_ = function(gl) {
+  return (
+'\n');
 };

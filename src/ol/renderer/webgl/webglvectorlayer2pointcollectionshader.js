@@ -4,9 +4,14 @@ goog.require('ol.webgl.shader');
 /**
  * @constructor
  * @extends {ol.webgl.shader.Fragment}
+ * @param {WebGLRenderingContext=} opt_gl GL.
  */
-ol.renderer.webgl.vectorlayer2.shader.PointCollectionFragment = function() {
-  goog.base(this, ol.renderer.webgl.vectorlayer2.shader.PointCollectionFragment.SOURCE);
+ol.renderer.webgl.vectorlayer2.shader.PointCollectionFragment = function(opt_gl) {
+  var source = ol.renderer.webgl.vectorlayer2.shader.PointCollectionFragment.SOURCE;
+  if (goog.isDef(opt_gl)) {
+    source = ol.renderer.webgl.vectorlayer2.shader.PointCollection.sourcePreamble_(opt_gl) + source;
+  }
+  goog.base(this, source);
 };
 goog.inherits(ol.renderer.webgl.vectorlayer2.shader.PointCollectionFragment, ol.webgl.shader.Fragment);
 goog.addSingletonGetter(ol.renderer.webgl.vectorlayer2.shader.PointCollectionFragment);
@@ -14,7 +19,7 @@ goog.addSingletonGetter(ol.renderer.webgl.vectorlayer2.shader.PointCollectionFra
  * @const
  * @type {string}
  */
-ol.renderer.webgl.vectorlayer2.shader.PointCollectionFragment.DEBUG_SOURCE = 'precision mediump float;\n//! NAMESPACE=ol.renderer.webgl.vectorlayer2.shader.PointCollection\n//! CLASS=ol.renderer.webgl.vectorlayer2.shader.PointCollection\n\n\n//! FRAGMENT\nuniform vec4 u_color;\n\nvoid main(void) {\n  gl_FragColor = u_color;\n}\n\n';
+ol.renderer.webgl.vectorlayer2.shader.PointCollectionFragment.DEBUG_SOURCE = '//! NAMESPACE=ol.renderer.webgl.vectorlayer2.shader.PointCollection\n//! CLASS=ol.renderer.webgl.vectorlayer2.shader.PointCollection\n\n//! COMMON\nprecision mediump float;\n\n//! FRAGMENT\nuniform vec4 u_color;\n\nvoid main(void) {\n  gl_FragColor = u_color;\n}\n\n';
 /**
  * @const
  * @type {string}
@@ -30,9 +35,14 @@ ol.renderer.webgl.vectorlayer2.shader.PointCollectionFragment.SOURCE = goog.DEBU
 /**
  * @constructor
  * @extends {ol.webgl.shader.Vertex}
+ * @param {WebGLRenderingContext=} opt_gl GL.
  */
-ol.renderer.webgl.vectorlayer2.shader.PointCollectionVertex = function() {
-  goog.base(this, ol.renderer.webgl.vectorlayer2.shader.PointCollectionVertex.SOURCE);
+ol.renderer.webgl.vectorlayer2.shader.PointCollectionVertex = function(opt_gl) {
+  var source = ol.renderer.webgl.vectorlayer2.shader.PointCollectionVertex.SOURCE;
+  if (goog.isDef(opt_gl)) {
+    source = ol.renderer.webgl.vectorlayer2.shader.PointCollection.sourcePreamble_(opt_gl) + source;
+  }
+  goog.base(this, source);
 };
 goog.inherits(ol.renderer.webgl.vectorlayer2.shader.PointCollectionVertex, ol.webgl.shader.Vertex);
 goog.addSingletonGetter(ol.renderer.webgl.vectorlayer2.shader.PointCollectionVertex);
@@ -40,12 +50,12 @@ goog.addSingletonGetter(ol.renderer.webgl.vectorlayer2.shader.PointCollectionVer
  * @const
  * @type {string}
  */
-ol.renderer.webgl.vectorlayer2.shader.PointCollectionVertex.DEBUG_SOURCE = '//! NAMESPACE=ol.renderer.webgl.vectorlayer2.shader.PointCollection\n//! CLASS=ol.renderer.webgl.vectorlayer2.shader.PointCollection\n\n\n//! VERTEX\nattribute vec2 a_position;\nuniform float u_pointSize;\nuniform mat4 u_modelViewMatrix;\n\nvoid main(void) {\n  gl_Position = u_modelViewMatrix * vec4(a_position, 0., 1.);\n  gl_PointSize = u_pointSize;\n}\n\n\n';
+ol.renderer.webgl.vectorlayer2.shader.PointCollectionVertex.DEBUG_SOURCE = '//! NAMESPACE=ol.renderer.webgl.vectorlayer2.shader.PointCollection\n//! CLASS=ol.renderer.webgl.vectorlayer2.shader.PointCollection\n\n//! COMMON\nprecision mediump float;\n\n//! VERTEX\nattribute vec2 a_position;\nuniform float u_pointSize;\nuniform mat4 u_modelViewMatrix;\n\nvoid main(void) {\n  gl_Position = u_modelViewMatrix * vec4(a_position, 0., 1.);\n  gl_PointSize = u_pointSize;\n}\n\n\n';
 /**
  * @const
  * @type {string}
  */
-ol.renderer.webgl.vectorlayer2.shader.PointCollectionVertex.OPTIMIZED_SOURCE = 'attribute vec2 c;uniform float a;uniform mat4 b;void main(){gl_Position=b*vec4(c,0,1);gl_PointSize=a;}';
+ol.renderer.webgl.vectorlayer2.shader.PointCollectionVertex.OPTIMIZED_SOURCE = 'precision mediump float;attribute vec2 c;uniform float a;uniform mat4 b;void main(){gl_Position=b*vec4(c,0,1);gl_PointSize=a;}';
 /**
  * @const
  * @type {string}
@@ -79,4 +89,18 @@ ol.renderer.webgl.vectorlayer2.shader.PointCollection.Locations = function(gl, p
    */
   this.a_position = gl.getAttribLocation(
       program, goog.DEBUG ? 'a_position' : 'c');
+};
+/**
+ * Generates a source preamble from the expressions in JSCONST
+ * directives.
+ * We have the rendering context passed in to allow querying
+ * extensions and context attributes.
+ *
+ * @private
+ * @param {WebGLRenderingContext} gl GL.
+ * @return {string} Shader source preamble.
+ */
+ol.renderer.webgl.vectorlayer2.shader.PointCollection.sourcePreamble_ = function(gl) {
+  return (
+'\n');
 };

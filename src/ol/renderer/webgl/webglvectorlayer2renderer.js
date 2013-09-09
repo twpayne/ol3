@@ -5,10 +5,14 @@ goog.require('goog.asserts');
 goog.require('goog.vec.Mat4');
 goog.require('goog.webgl');
 goog.require('ol.math');
+goog.require('ol.renderer.webgl.Batch');
+goog.require('ol.renderer.webgl.BatchBuilder');
+goog.require('ol.renderer.webgl.BatchRenderer');
 goog.require('ol.renderer.webgl.Layer');
-goog.require('ol.renderer.webgl.vectorlayer2.shader.LineStringCollection');
+goog.require('ol.renderer.webgl.VectorRender');
+goog.require('ol.renderer.webgl.VectorRenderShader');
+goog.require('ol.renderer.webgl.testData');
 goog.require('ol.renderer.webgl.vectorlayer2.shader.PointCollection');
-goog.require('ol.structs.Buffer');
 goog.require('ol.style.LineLiteral');
 
 
@@ -39,19 +43,36 @@ ol.renderer.webgl.VectorLayer2 = function(mapRenderer, vectorLayer2) {
    */
   this.modelViewMatrix_ = goog.vec.Mat4.createNumberIdentity();
 
+
   /**
    * @private
-   * @type
-   *     {ol.renderer.webgl.vectorlayer2.shader.LineStringCollection.Locations}
+   * @type {?number}
    */
-  this.lineStringCollectionLocations_ = null;
+  this.framebufferDimension_ = null;
+
+  /**
+   * @private
+   * @type {?ol.renderer.webgl.BatchRenderer}
+   */
+  this.batchRenderer_ = null;
+
+  /**
+   * @private
+   * @type {ol.renderer.webgl.BatchBuilder}
+   */
+  this.batchBuilder_ = new ol.renderer.webgl.BatchBuilder(30, 160);
+
+  /**
+   * @private
+   * @type {?ol.renderer.webgl.Batch}
+   */
+  this.batch_ = null;
 
   /**
    * @private
    * @type {ol.renderer.webgl.vectorlayer2.shader.PointCollection.Locations}
    */
   this.pointCollectionLocations_ = null;
-
 };
 goog.inherits(ol.renderer.webgl.VectorLayer2, ol.renderer.webgl.Layer);
 
@@ -129,6 +150,7 @@ ol.renderer.webgl.VectorLayer2.prototype.renderFrame =
 
   this.bindFramebuffer(frameState, framebufferDimension);
   gl.viewport(0, 0, framebufferDimension, framebufferDimension);
+  this.framebufferDimension_ = framebufferDimension;
 
   gl.clearColor(0, 0, 0, 0);
   gl.clear(goog.webgl.COLOR_BUFFER_BIT);
@@ -151,10 +173,34 @@ ol.renderer.webgl.VectorLayer2.prototype.renderFrame =
   if (pointCollections.length > 0) {
     this.renderPointCollections(pointCollections);
   }
-  var lineStrings = vectorSource.getLineStrings();
-  if (lineStrings.length > 0) {
-    this.renderLineStrings(lineStrings, framebufferDimension);
+
+  var batchRenderer = this.prepareBatchRenderer_();
+
+  var batch = this.batch_;
+  if (goog.isNull(batch)) {
+    // TODO should also enter here when data has changed and...
+    //
+    // // Free resources of old version
+    // if (! goog.isNull(this.batch_)) {
+    //   ol.renderer.webgl.BatchRenderer_.unload(gl, this.batch_);
+    // }
+
+    this.renderPolygons();
+
+    var lineStrings = vectorSource.getLineStrings();
+    if (lineStrings.length > 0) {
+      this.renderLineStrings(lineStrings);
+    }
+
+    // Upload batch
+    var blueprint = this.batchBuilder_.releaseBlueprint();
+    this.batch_ = batch =
+        ol.renderer.webgl.BatchRenderer.upload(gl, blueprint);
   }
+
+  // Render and forget the GL state (as there's rendering outside of it)
+  batchRenderer.render(gl, batch);
+  batchRenderer.reset(gl);
 
   goog.vec.Mat4.makeIdentity(this.texCoordMatrix);
   goog.vec.Mat4.translate(this.texCoordMatrix,
@@ -174,77 +220,121 @@ ol.renderer.webgl.VectorLayer2.prototype.renderFrame =
 
 
 /**
- * @param {Array.<ol.StyledLineStringCollection>} lineStrings Line strings.
- * @param {number} framebufferDimension Framebuffer dimension.
+ * @return {ol.renderer.webgl.BatchRenderer}
+ * @private
  */
-ol.renderer.webgl.VectorLayer2.prototype.renderLineStrings =
-    function(lineStrings, framebufferDimension) {
+ol.renderer.webgl.VectorLayer2.prototype.prepareBatchRenderer_ =
+    function() {
 
   var mapRenderer = this.getWebGLMapRenderer();
-  var gl = mapRenderer.getGL();
+  var gl = /**@type{!WebGLRenderingContext}*/ (mapRenderer.getGL());
 
-  var fragmentShader = ol.renderer.webgl.vectorlayer2.shader.
-      LineStringCollectionFragment.getInstance();
-  var vertexShader = ol.renderer.webgl.vectorlayer2.shader.
-      LineStringCollectionVertex.getInstance();
-  var program = mapRenderer.getProgram(fragmentShader, vertexShader);
-  gl.useProgram(program);
-  if (goog.isNull(this.lineStringCollectionLocations_)) {
-    this.lineStringCollectionLocations_ =
-        new ol.renderer.webgl.vectorlayer2.shader.LineStringCollection.
-            Locations(gl, program);
+  // Eventually create batch renderer
+
+  var batchRenderer = this.batchRenderer_;
+  if (goog.isNull(batchRenderer)) {
+
+    var program = /**@type{!WebGLProgram}*/(mapRenderer.getProgram(
+        new ol.renderer.webgl.VectorRenderShaderFragment(gl),
+        new ol.renderer.webgl.VectorRenderShaderVertex(gl)));
+    var locations = new ol.renderer.webgl.
+        VectorRenderShader.Locations(gl, program);
+
+    batchRenderer = new ol.renderer.webgl.BatchRenderer();
+    // TODO Remove this glue code once the open ends are closed:
+    // TODO There will be separate render / shader instances and we
+    // TODO might want to factor their registration into the renderer
+    batchRenderer.registerRender(
+        new ol.renderer.webgl.VectorRender(
+            ol.renderer.webgl.Batch.ControlStream.RenderType.LINES,
+            program, locations));
+    batchRenderer.registerRender(
+        new ol.renderer.webgl.VectorRender(
+            ol.renderer.webgl.Batch.ControlStream.RenderType.POLYGONS,
+            program, locations));
+
+    this.batchRenderer_ = batchRenderer;
   }
 
-  var locations = this.lineStringCollectionLocations_;
-  var antiAliasing = 1.75, gamma = 2.3;
-  gl.uniform3f(locations.RenderParams, antiAliasing, gamma, 1 / gamma);
-  gl.uniformMatrix4fv(locations.Transform, false, this.modelViewMatrix_);
-  gl.uniform2f(locations.PixelScale,
-      2 / framebufferDimension, 2 / framebufferDimension);
-  gl.enableVertexAttribArray(locations.PositionP);
-  gl.enableVertexAttribArray(locations.Position0);
-  gl.enableVertexAttribArray(locations.PositionN);
-  gl.enableVertexAttribArray(locations.Control);
+  // Set parameters
 
+  var framebufferDimension = this.framebufferDimension_;
+  batchRenderer.setParameter(
+      ol.renderer.webgl.Render.Parameter.NDC_PIXEL_SIZE,
+      [2 / framebufferDimension, 2 / framebufferDimension]);
+
+  // Pull translation "before" the transform to increase precision
+  var rteMatrix = [], rtePretranslation = [];
+  ol.renderer.webgl.highPrecision.detachTranslation(
+      rtePretranslation, rteMatrix, this.modelViewMatrix_);
+  batchRenderer.setParameter(
+      ol.renderer.webgl.Render.Parameter.RTE_PRETRANSLATION, rtePretranslation);
+  batchRenderer.setParameter(
+      ol.renderer.webgl.Render.Parameter.COORDINATE_TRANSFORM, rteMatrix);
+
+  return batchRenderer;
+};
+
+
+/**
+ */
+ol.renderer.webgl.VectorLayer2.prototype.renderPolygons =
+    function() {
+
+  var batchBuilder = this.batchBuilder_;
+
+  // Not part of the style - a global renderer parameter, this
+  // dependency will be removed when splitting lines from polygons.
+  var antiAliasing = 1.75; // TODO  remove me
+
+  // Set style
+  // TODO Get style data and replace this hard-wired hack
+  var color = new ol.Color(0, 0, 255, 1);
+  var strokeWidth = 2.0; // pixels
+  var strokeColor = new ol.Color(255, 255, 0, 1);
+  batchBuilder.setPolygonStyle(
+      color, antiAliasing, strokeWidth, strokeColor);
+
+  // TODO Get polygon geometry data and replace this hard-wired hack
+  batchBuilder.polygon([
+    ol.renderer.webgl.testData.france(3000, 355242, 5891862)]);
+  batchBuilder.polygon([
+    ol.renderer.webgl.testData.TRIANGLE,
+    ol.renderer.webgl.testData.SQUARE]);
+};
+
+
+/**
+ * @param {Array.<ol.StyledLineStringCollection>} lineStrings Line strings.
+ */
+ol.renderer.webgl.VectorLayer2.prototype.renderLineStrings =
+    function(lineStrings) {
+
+  var batchBuilder = this.batchBuilder_;
+
+  // Set style
+  // TODO Get style data and replace this hard-wired hack
+  var lineWidth = 15.0; // pixels
+  var color = new ol.Color(255, 0, 0, 1);
+  var strokeWidth = 0.0; // fractional 0..1-eps
+  var strokeColor = new ol.Color(255, 255, 0, 1);
+  batchBuilder.setLineStyle(
+      lineWidth, color, strokeWidth, strokeColor);
+
+  // Draw geometry to batch
   var buf, dim, i, indexBuffer, indices, lineStringCollection;
   for (i = 0; i < lineStrings.length; ++i) {
     lineStringCollection = lineStrings[i].lineStrings;
     buf = lineStringCollection.buf;
     dim = lineStringCollection.dim;
     goog.asserts.assert(dim == 2);
-    var vertices = [], inputCoords = buf.getArray();
+    var inputCoords = /**@type{!Array.<number>}*/(buf.getArray());
     var ends = lineStringCollection.ends;
     for (var offset in ends) {
       var end = ends[offset];
-
-      ol.renderer.webgl.VectorLayer2.expandLineString_(
-          vertices, inputCoords, Number(offset), end, 2);
+      batchBuilder.lineString(inputCoords, Number(offset), end);
     }
-    var verticiesBuf = new ol.structs.Buffer(vertices);
-    mapRenderer.bindBuffer(goog.webgl.ARRAY_BUFFER, verticiesBuf);
-    gl.vertexAttribPointer(
-        locations.PositionP, 2, goog.webgl.FLOAT, false, 12, 0);
-    gl.vertexAttribPointer(
-        locations.Position0, 2, goog.webgl.FLOAT, false, 12, 24);
-    gl.vertexAttribPointer(
-        locations.PositionN, 2, goog.webgl.FLOAT, false, 12, 48);
-    gl.vertexAttribPointer(
-        locations.Control, 1, goog.webgl.FLOAT, false, 12, 32);
-    var lineWidth = 15.0; // pixels
-    var opacity = 255; // 0..255
-    var color = ol.renderer.webgl.VectorLayer2.encodeRGB_(1, 0, 0);
-    var strokeWidth = 0.0; // fractional 0..1-eps
-    var stroke = ol.renderer.webgl.VectorLayer2.encodeRGB_(1, 1, 0);
-    gl.vertexAttrib4f(locations.Style, lineWidth, color,
-                      Math.floor(opacity) + strokeWidth, stroke);
-    gl.drawArrays(goog.webgl.TRIANGLE_STRIP, 0, vertices.length / 3 - 4);
   }
-
-  gl.disableVertexAttribArray(locations.PositionP);
-  gl.disableVertexAttribArray(locations.Position0);
-  gl.disableVertexAttribArray(locations.PositionN);
-  gl.disableVertexAttribArray(locations.Control);
-
 };
 
 
@@ -289,208 +379,5 @@ ol.renderer.webgl.VectorLayer2.prototype.renderPointCollections =
   }
 
   gl.disableVertexAttribArray(this.pointCollectionLocations_.a_position);
-
-};
-
-
-/**
- * Encodes an RGB tuple within a sngle float.
- * @param {number} r Red component 0..1.
- * @param {number} g Green component 0..1.
- * @param {number} b Blue component 0..1.
- * @return {number} Encoded color.
- * @private
- */
-ol.renderer.webgl.VectorLayer2.encodeRGB_ = function(r, g, b) {
-  return Math.floor(r * 255) * 256 +
-         Math.floor(g * 255) +
-         Math.floor(b * 255) / 256;
-};
-
-
-/**
- * Edge control flags as processed by the vertex shader.
- * @enum {number}
- * @private
- */
-ol.renderer.webgl.VectorLayer2.surfaceFlags_ = {
-  NOT_AT_EDGE: 0,
-  EDGE_LEFT: 1,
-  EDGE_RIGHT: 2,
-  LAST_INNER: 4,
-  LAST_OUTER: 8,
-  NO_RENDER: 12
-};
-
-
-/**
- * @param {Array.<number>} dst Destination array for buffer contents.
- * @param {Array.<number>} coords Array of packed input coordinates.
- * @param {number} offset Start index in input array.
- * @param {number} end End index (exclusive).
- * @param {number} nDimensions Number of dimensions per coordinate.
- * @private
- */
-ol.renderer.webgl.VectorLayer2.expandLineString_ = function(
-    dst, coords, offset, end, nDimensions) {
-
-  var last = end - nDimensions;
-  var i, j, e = offset + nDimensions;
-
-  // Assume ring when coordinates of first and last vertex match
-  var isRing = true;
-  for (i = offset, j = last; i != e; ++i, ++j) {
-    if (coords[i] != coords[j]) {
-      isRing = false;
-      break;
-    }
-  }
-  if (isRing) {
-    end -= nDimensions;
-    ol.renderer.webgl.VectorLayer2.expandLinearRing_(
-        dst, coords, offset, end, nDimensions, nDimensions);
-    return;
-  }
-
-  // Vertex pattern used for lines:
-  // ------------------------------
-  //
-  // L1  R1   L0  R0   L0  R0   L1  R1
-  // ~~~~~~   ======   ------
-  //
-  // LM  RM   LN  RN   LN  RN   LM  RM
-  //          ------   ======   ~~~~~~
-  //
-  // \________|_________/             <- info visible in the
-  //     \________|_________/              shader at specific
-  //          \________|_________/         vertices
-  //               \________|_________/
-  //
-  // Legend:
-  //     ~ Sentinel vertex
-  //     = Terminal vertex, outer
-  //     - Terminal vertex, inner
-  //     - N: Last index, M: Second last index
-  //
-  // Terminal vertices:
-  //     - one of the two adjacent edges is zero
-  //     - sum is the negated actual edge
-  //     - 1st nonzero => start of line
-  //     - 2nd nonzero => end of line
-  //     - difference 1st minus 2nd gives outside direction
-
-  j = offset + nDimensions;
-  e = j + nDimensions;
-  for (i = j; i != e; ++i) dst.push(coords[i]);
-  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.NO_RENDER);
-  for (i = j; i != e; ++i) dst.push(coords[i]);
-  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.NO_RENDER);
-
-  j = offset;
-  e = j + nDimensions;
-  for (i = j; i != e; ++i) dst.push(coords[i]);
-  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.EDGE_LEFT |
-           ol.renderer.webgl.VectorLayer2.surfaceFlags_.LAST_OUTER);
-  for (i = j; i != e; ++i) dst.push(coords[i]);
-  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.EDGE_RIGHT |
-           ol.renderer.webgl.VectorLayer2.surfaceFlags_.LAST_OUTER);
-  for (i = j; i != e; ++i) dst.push(coords[i]);
-  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.EDGE_LEFT |
-           ol.renderer.webgl.VectorLayer2.surfaceFlags_.LAST_INNER);
-  for (i = j; i != e; ++i) dst.push(coords[i]);
-  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.EDGE_RIGHT |
-           ol.renderer.webgl.VectorLayer2.surfaceFlags_.LAST_INNER);
-
-  for (j = offset + nDimensions; j != last; j = e) {
-
-    e = j + nDimensions;
-    for (i = j; i != e; ++i) dst.push(coords[i]);
-    dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.EDGE_LEFT);
-    for (i = j; i != e; ++i) dst.push(coords[i]);
-    dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.EDGE_RIGHT);
-  }
-
-  e = j + nDimensions;
-  for (i = j; i != e; ++i) dst.push(coords[i]);
-  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.EDGE_LEFT |
-           ol.renderer.webgl.VectorLayer2.surfaceFlags_.LAST_INNER);
-  for (i = j; i != e; ++i) dst.push(coords[i]);
-  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.EDGE_RIGHT |
-           ol.renderer.webgl.VectorLayer2.surfaceFlags_.LAST_INNER);
-  for (i = j; i != e; ++i) dst.push(coords[i]);
-  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.EDGE_LEFT |
-           ol.renderer.webgl.VectorLayer2.surfaceFlags_.LAST_OUTER);
-  for (i = j; i != e; ++i) dst.push(coords[i]);
-  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.EDGE_RIGHT |
-           ol.renderer.webgl.VectorLayer2.surfaceFlags_.LAST_OUTER);
-
-  j = last - nDimensions;
-  e = last;
-  for (i = j; i != e; ++i) dst.push(coords[i]);
-  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.NO_RENDER);
-  for (i = j; i != e; ++i) dst.push(coords[i]);
-  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.NO_RENDER);
-};
-
-
-/**
- * @param {Array.<number>} dst Destination array for buffer contents.
- * @param {Array.<number>} coords Array of packed input coordinates.
- * @param {number} offset Start index in input array.
- * @param {number} end End index (exclusive).
- * @param {number} stride Index distance of input coordinates.
- * @param {number} nDimensions Number of dimensions per coordinate.
- * @param {boolean=} opt_forPolygon When set, will use not create a
- *     left edge and not emit a redundant vertex for direct rendering
- *     of triangle strips. Off by default.
- * @private
- */
-ol.renderer.webgl.VectorLayer2.expandLinearRing_ = function(
-    dst, coords, offset, end, stride, nDimensions, opt_forPolygon) {
-
-  // Won't need a left edge when using CCW winding for the
-  // outside contours and CW winding for inside contours of
-  // polygons
-  var leftEdge = ! opt_forPolygon ?
-          ol.renderer.webgl.VectorLayer2.surfaceFlags_.EDGE_LEFT :
-          ol.renderer.webgl.VectorLayer2.surfaceFlags_.NOT_AT_EDGE;
-
-  var i, j = end - stride;
-  var e = j + nDimensions;
-
-  // Last coord on start sentinel (for proper miters)
-  for (i = j; i != e; ++i) dst.push(coords[i]);
-  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.NO_RENDER);
-  for (i = j; i != e; ++i) dst.push(coords[i]);
-  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.NO_RENDER);
-
-  // Line string from coordinates
-  for (j = offset; j != end; j += stride) {
-
-    e = j + nDimensions;
-    for (i = j; i != e; ++i) dst.push(coords[i]);
-    dst.push(leftEdge);
-    for (i = j; i != e; ++i) dst.push(coords[i]);
-    dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.EDGE_RIGHT);
-  }
-
-  // Wrap around
-  j = offset;
-  if (! opt_forPolygon) {
-    // Have the wrapped vertex be valid (not a sentinel yet)
-    // in order to close the ring when rendering a strip
-    e = j + nDimensions;
-    for (i = j; i != e; ++i) dst.push(coords[i]);
-    dst.push(leftEdge);
-    for (i = j; i != e; ++i) dst.push(coords[i]);
-    dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.EDGE_RIGHT);
-    j += stride;
-  }
-  // Next (first or second) on end sentinel
-  e = j + nDimensions;
-  for (i = j; i != e; ++i) dst.push(coords[i]);
-  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.NO_RENDER);
-  for (i = j; i != e; ++i) dst.push(coords[i]);
-  dst.push(ol.renderer.webgl.VectorLayer2.surfaceFlags_.NO_RENDER);
 
 };

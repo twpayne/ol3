@@ -1,6 +1,8 @@
 //! NAMESPACE=ol.renderer.webgl.vectorlayer2.shader.PointCollection
 //! CLASS=ol.renderer.webgl.vectorlayer2.shader.PointCollection
 
+//! COMMON
+precision mediump float;
 
 //! VERTEX
 attribute vec2 a_position;

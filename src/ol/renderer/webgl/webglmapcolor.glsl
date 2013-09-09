@@ -3,8 +3,10 @@
 
 
 //! COMMON
-varying vec2 v_texCoord;
 
+precision mediump float;
+
+varying vec2 v_texCoord;
 
 //! VERTEX
 attribute vec2 a_position;
