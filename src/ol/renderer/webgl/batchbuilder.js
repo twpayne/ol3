@@ -892,7 +892,7 @@ ol.renderer.webgl.BatchBuilder.tessVertexCallback_ = function(index, indices) {
 ol.renderer.webgl.BatchBuilder.tessErrorCallback_ = function(errno) {
 
   var name = '';
-  if (! goog.DEBUG) {
+  if (goog.DEBUG) {
     // Only attempt to find symbol in debug mode.
 
     for (var key in libtess.errorType) {
