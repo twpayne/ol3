@@ -12,7 +12,7 @@ goog.require('ol.Tile');
 goog.require('ol.TileRange');
 goog.require('ol.TileState');
 goog.require('ol.extent');
-goog.require('ol.layer.TileLayer');
+goog.require('ol.layer.Tile');
 goog.require('ol.math');
 goog.require('ol.renderer.webgl.Layer');
 goog.require('ol.renderer.webgl.tilelayer.shader');
@@ -24,7 +24,7 @@ goog.require('ol.structs.Buffer');
  * @constructor
  * @extends {ol.renderer.webgl.Layer}
  * @param {ol.renderer.Map} mapRenderer Map renderer.
- * @param {ol.layer.TileLayer} tileLayer Tile layer.
+ * @param {ol.layer.Tile} tileLayer Tile layer.
  */
 ol.renderer.webgl.TileLayer = function(mapRenderer, tileLayer) {
 
@@ -72,6 +72,12 @@ ol.renderer.webgl.TileLayer = function(mapRenderer, tileLayer) {
    */
   this.renderedFramebufferExtent_ = null;
 
+  /**
+   * @private
+   * @type {number}
+   */
+  this.renderedRevision_ = -1;
+
 };
 goog.inherits(ol.renderer.webgl.TileLayer, ol.renderer.webgl.Layer);
 
@@ -88,10 +94,10 @@ ol.renderer.webgl.TileLayer.prototype.disposeInternal = function() {
 
 /**
  * @protected
- * @return {ol.layer.TileLayer} Tile layer.
+ * @return {ol.layer.Tile} Tile layer.
  */
 ol.renderer.webgl.TileLayer.prototype.getTileLayer = function() {
-  return /** @type {ol.layer.TileLayer} */ (this.getLayer());
+  return /** @type {ol.layer.Tile} */ (this.getLayer());
 };
 
 
@@ -138,7 +144,8 @@ ol.renderer.webgl.TileLayer.prototype.renderFrame =
 
   var framebufferExtent;
   if (!goog.isNull(this.renderedTileRange_) &&
-      this.renderedTileRange_.equals(tileRange)) {
+      this.renderedTileRange_.equals(tileRange) &&
+      this.renderedRevision_ == tileSource.getRevision()) {
     framebufferExtent = this.renderedFramebufferExtent_;
   } else {
 
@@ -258,9 +265,11 @@ ol.renderer.webgl.TileLayer.prototype.renderFrame =
     if (allTilesLoaded) {
       this.renderedTileRange_ = tileRange;
       this.renderedFramebufferExtent_ = framebufferExtent;
+      this.renderedRevision_ = tileSource.getRevision();
     } else {
       this.renderedTileRange_ = null;
       this.renderedFramebufferExtent_ = null;
+      this.renderedRevision_ = -1;
       frameState.animate = true;
     }
 
