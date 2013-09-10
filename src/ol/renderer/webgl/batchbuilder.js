@@ -90,7 +90,7 @@ ol.renderer.webgl.BatchBuilder.prototype.releaseBlueprint = function() {
  * Sets the style for line rendering.
  *
  * @param {number} width Width of the line.
- * @param {!ol.Color} color Fill color and alpha.
+ * @param {ol.Color} color Fill color and alpha.
  * @param {number=} opt_strokeWidth Fractional stroke width.
  * @param {ol.Color=} opt_strokeColor Stroke color (alpha is ignored
  *    instead the opacity specified by the fill color is used).
@@ -98,9 +98,8 @@ ol.renderer.webgl.BatchBuilder.prototype.releaseBlueprint = function() {
 ol.renderer.webgl.BatchBuilder.prototype.setLineStyle =
     function(width, color, opt_strokeWidth, opt_strokeColor) {
 
-  var /**@type{number}*/ strokeWidth = (
-      goog.math.clamp(opt_strokeWidth || 0, 0, 0.9999)),
-      /**@type{!ol.Color}*/ strokeColor = opt_strokeColor || color;
+  var strokeWidth = goog.math.clamp(opt_strokeWidth || 0, 0, 0.9999);
+  var strokeColor = opt_strokeColor || color;
 
   this.setStyle_(
       ol.renderer.webgl.batch.ControlStreamRenderType.LINES,
@@ -262,7 +261,7 @@ ol.renderer.webgl.BatchBuilder.prototype.lineString =
 /**
  * Set the style for polygon rendering.
  *
- * @param {!ol.Color} color Fill color and alpha.
+ * @param {ol.Color} color Fill color and alpha.
  * @param {number} antiAliasing Anti-Aliasing width used by the renderer.
  * @param {number=} opt_strokeWidth Stroke width in pixels.
  * @param {ol.Color=} opt_strokeColor Stroke color (alpha is ignored
@@ -289,8 +288,7 @@ ol.renderer.webgl.BatchBuilder.prototype.setPolygonStyle =
       extrude,
       ol.renderer.webgl.BatchBuilder.encodeRGB_(color),
       -(Math.floor(color.a * 255) + outlineWidth),
-      ol.renderer.webgl.BatchBuilder.encodeRGB_(
-          /**@type{!ol.Color}*/(strokeColor)));
+      ol.renderer.webgl.BatchBuilder.encodeRGB_(strokeColor));
 };
 
 
@@ -857,7 +855,7 @@ ol.renderer.webgl.BatchBuilder.emitQuadIndices_ =
 /**
  * Encode a color (without alpha) in a floatingpoint value.
  *
- * @param {!ol.Color} color Color to encode.
+ * @param {ol.Color} color Color to encode.
  * @return {number} Encoded red, green and blue component (8 bit each).
  * @private
  */
