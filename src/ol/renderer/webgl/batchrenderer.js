@@ -3,8 +3,8 @@ goog.provide('ol.renderer.webgl.BatchRenderer');
 goog.require('goog.array');
 goog.require('goog.asserts');
 goog.require('goog.webgl');
-goog.require('ol.renderer.webgl.Batch');
 goog.require('ol.renderer.webgl.Render');
+goog.require('ol.renderer.webgl.batch');
 
 
 
@@ -133,7 +133,7 @@ ol.renderer.webgl.BatchRenderer.DEFAULT_PARAM_VECTOR_ = [
  * the GL.
  *
  * @param {!WebGLRenderingContext} gl GL.
- * @param {!ol.renderer.webgl.Batch.Blueprint} blueprint Batch blueprint.
+ * @param {!ol.renderer.webgl.batch.Blueprint} blueprint Batch blueprint.
  * @return {!ol.renderer.webgl.Batch}
  */
 ol.renderer.webgl.BatchRenderer.upload = function(gl, blueprint) {
@@ -181,7 +181,7 @@ ol.renderer.webgl.BatchRenderer.prototype.render = function(gl, batch) {
   while (++i < n) {
     switch (controlStream[i]) {
 
-      case ol.renderer.webgl.Batch.ControlStream.Instruction.DRAW_ELEMENTS:
+      case ol.renderer.webgl.batch.ControlStreamInstruction.DRAW_ELEMENTS:
 
         arg0 = controlStream[++i];
         gl.drawElements(
@@ -190,12 +190,12 @@ ol.renderer.webgl.BatchRenderer.prototype.render = function(gl, batch) {
         indexOffset += arg0 * 2;
         break;
 
-      case ol.renderer.webgl.Batch.ControlStream.Instruction.SET_STYLE:
+      case ol.renderer.webgl.batch.ControlStreamInstruction.SET_STYLE:
 
         i = this.currentRender_.setStyle(gl, controlStream, ++i);
         break;
 
-      case ol.renderer.webgl.Batch.ControlStream.Instruction.CONFIGURE:
+      case ol.renderer.webgl.batch.ControlStreamInstruction.CONFIGURE:
 
         arg0 = controlStream[++i];
         arg1 = controlStream[++i];

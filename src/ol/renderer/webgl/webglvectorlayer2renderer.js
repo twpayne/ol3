@@ -6,13 +6,13 @@ goog.require('goog.vec.Mat4');
 goog.require('goog.webgl');
 goog.require('ol.Color');
 goog.require('ol.math');
-goog.require('ol.renderer.webgl.Batch');
 goog.require('ol.renderer.webgl.BatchBuilder');
 goog.require('ol.renderer.webgl.BatchRenderer');
 goog.require('ol.renderer.webgl.Layer');
 goog.require('ol.renderer.webgl.Render');
 goog.require('ol.renderer.webgl.VectorRender');
 goog.require('ol.renderer.webgl.VectorRenderShader');
+goog.require('ol.renderer.webgl.batch');
 goog.require('ol.renderer.webgl.highPrecision');
 goog.require('ol.renderer.webgl.testData');
 goog.require('ol.renderer.webgl.vectorlayer2.shader.PointCollection');
@@ -249,11 +249,11 @@ ol.renderer.webgl.VectorLayer2.prototype.prepareBatchRenderer_ =
     // TODO might want to factor their registration into the renderer
     batchRenderer.registerRender(
         new ol.renderer.webgl.VectorRender(
-            ol.renderer.webgl.Batch.ControlStream.RenderType.LINES,
+            ol.renderer.webgl.batch.ControlStreamRenderType.LINES,
             program, locations));
     batchRenderer.registerRender(
         new ol.renderer.webgl.VectorRender(
-            ol.renderer.webgl.Batch.ControlStream.RenderType.POLYGONS,
+            ol.renderer.webgl.batch.ControlStreamRenderType.POLYGONS,
             program, locations));
 
     this.batchRenderer_ = batchRenderer;

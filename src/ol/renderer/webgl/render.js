@@ -12,7 +12,7 @@ goog.provide('ol.renderer.webgl.Render');
  * vertex encoding.
  *
  * @constructor
- * @param {!ol.renderer.webgl.Batch.ControlStream.RenderType} type ID.
+ * @param {!ol.renderer.webgl.batch.ControlStreamRenderType} type ID.
  * @param {!WebGLProgram} program Rendering pipeline to use.
  * @param {!ol.renderer.webgl.Render.VertexBufferFormat}
  *     vertexBufferFormat Vertex array layout.
@@ -41,7 +41,7 @@ ol.renderer.webgl.Render = function(type, program, vertexBufferFormat) {
  * Set style.
  *
  * @param {!WebGLRenderingContext} gl GL.
- * @param {!ol.renderer.webgl.Batch.ControlStream} controlStream
+ * @param {!ol.renderer.webgl.batch.ControlStream} controlStream
  *      Control stream.
  * @param {!number} offset Start index of the encoded style values in the
  *      control stream.

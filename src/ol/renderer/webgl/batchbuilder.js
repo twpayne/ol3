@@ -4,7 +4,7 @@ goog.require('goog.math');
 goog.require('libtess');
 goog.require('libtess.GluTesselator');
 goog.require('ol.Color');
-goog.require('ol.renderer.webgl.Batch');
+goog.require('ol.renderer.webgl.batch');
 goog.require('ol.renderer.webgl.highPrecision');
 
 
@@ -71,7 +71,7 @@ ol.renderer.webgl.BatchBuilder = function(maxStraightAngle, maxBevelAngle) {
 /**
  * Get the resulting batch data from this builder.
  *
- * @return {!ol.renderer.webgl.Batch.Blueprint} All data for rendering
+ * @return {!ol.renderer.webgl.batch.Blueprint} All data for rendering
  *     prior to upload to the GPU.
  */
 ol.renderer.webgl.BatchBuilder.prototype.releaseBlueprint = function() {
@@ -103,7 +103,7 @@ ol.renderer.webgl.BatchBuilder.prototype.setLineStyle =
       /**@type{!ol.Color}*/ strokeColor = opt_strokeColor || color;
 
   this.setStyle_(
-      ol.renderer.webgl.Batch.ControlStream.RenderType.LINES,
+      ol.renderer.webgl.batch.ControlStreamRenderType.LINES,
       width * 0.5,
       ol.renderer.webgl.BatchBuilder.encodeRGB_(color),
       Math.floor(color.a * 255) + strokeWidth,
@@ -125,7 +125,7 @@ ol.renderer.webgl.BatchBuilder.prototype.lineString =
     function(coords, offset, end) {
 
   this.requestConfig_(
-      ol.renderer.webgl.Batch.ControlStream.RenderType.LINES);
+      ol.renderer.webgl.batch.ControlStreamRenderType.LINES);
 
   // Vertex pattern used for lines:
   // ------------------------------
@@ -285,7 +285,7 @@ ol.renderer.webgl.BatchBuilder.prototype.setPolygonStyle =
     strokeColor = opt_strokeColor;
   }
   this.setStyle_(
-      ol.renderer.webgl.Batch.ControlStream.RenderType.POLYGONS,
+      ol.renderer.webgl.batch.ControlStreamRenderType.POLYGONS,
       extrude,
       ol.renderer.webgl.BatchBuilder.encodeRGB_(color),
       -(Math.floor(color.a * 255) + outlineWidth),
@@ -305,7 +305,7 @@ ol.renderer.webgl.BatchBuilder.prototype.setPolygonStyle =
 ol.renderer.webgl.BatchBuilder.prototype.polygon = function(contours) {
 
   this.requestConfig_(
-      ol.renderer.webgl.Batch.ControlStream.RenderType.POLYGONS);
+      ol.renderer.webgl.batch.ControlStreamRenderType.POLYGONS);
 
   var vertices = this.vertices_, indices = this.indices_,
       tess = this.gluTesselator_;
@@ -929,7 +929,7 @@ ol.renderer.webgl.BatchBuilder.prototype.reset_ = function() {
 
   /**
    * Control stream data.
-   * @type {!ol.renderer.webgl.Batch.ControlStream}
+   * @type {!ol.renderer.webgl.batch.ControlStream}
    * @private
    */
   this.control_ = [];
@@ -984,7 +984,7 @@ ol.renderer.webgl.BatchBuilder.prototype.reset_ = function() {
  * Ensure a specific render is activated at the current position in
  * the control stream.
  *
- * @param {!ol.renderer.webgl.Batch.ControlStream.RenderType} render
+ * @param {!ol.renderer.webgl.batch.ControlStreamRenderType} render
  * @private
  */
 ol.renderer.webgl.BatchBuilder.prototype.requestConfig_ =
@@ -1045,7 +1045,7 @@ ol.renderer.webgl.BatchBuilder.prototype.emitDraw_ = function() {
   if (n > 0) {
     // Any new indices? Have them drawn at this point
     this.control_.push(
-        ol.renderer.webgl.Batch.ControlStream.Instruction.DRAW_ELEMENTS);
+        ol.renderer.webgl.batch.ControlStreamInstruction.DRAW_ELEMENTS);
     this.control_.push(n);
     this.nIndicesFlushed_ = this.indices_.length;
   }
@@ -1065,7 +1065,7 @@ ol.renderer.webgl.BatchBuilder.prototype.emitSetStyle_ =
   // Write instruction and style quadruple to control stream
   var style = this.styles_[this.currentRender_];
   this.control_.push(
-      ol.renderer.webgl.Batch.ControlStream.Instruction.SET_STYLE);
+      ol.renderer.webgl.batch.ControlStreamInstruction.SET_STYLE);
   this.control_.push(style[0]);
   this.control_.push(style[1]);
   this.control_.push(style[2]);
@@ -1086,7 +1086,7 @@ ol.renderer.webgl.BatchBuilder.prototype.emitConfigure_ =
   // Write instruction, configuration index and vertex buffer
   // offset (in bytes) to the control stream
   this.control_.push(
-      ol.renderer.webgl.Batch.ControlStream.Instruction.CONFIGURE);
+      ol.renderer.webgl.batch.ControlStreamInstruction.CONFIGURE);
   this.control_.push(this.currentRender_);
   this.control_.push(this.vertexBufferOffset_ * 4);
 };

@@ -13,7 +13,7 @@ goog.require('ol.renderer.webgl.Render');
  * @class
  * @extends {ol.renderer.webgl.Render}
  * @constructor
- * @param {!ol.renderer.webgl.Batch.ControlStream.RenderType} type
+ * @param {!ol.renderer.webgl.batch.ControlStreamRenderType} type
  * @param {!WebGLProgram} program GL program.
  * @param {!Object} locations Program locations.
  */
