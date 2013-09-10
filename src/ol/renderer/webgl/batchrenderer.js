@@ -286,7 +286,7 @@ ol.renderer.webgl.BatchRenderer.prototype.disableVertexAttribArrays_ =
  *
  * @param {!WebGLRenderingContext} gl GL.
  * @param {!ol.renderer.webgl.Render.VertexBufferFormat} fmt Buffer format.
- * @param {!number} offset Byte offset within the vertex buffer.
+ * @param {number} offset Byte offset within the vertex buffer.
  * @private
  */
 ol.renderer.webgl.BatchRenderer.setVertexBufferFormat_ =
@@ -304,7 +304,7 @@ ol.renderer.webgl.BatchRenderer.setVertexBufferFormat_ =
  * Create and populate WebGL buffer.
  *
  * @param {!WebGLRenderingContext} gl GL.
- * @param {!number} target GL target descriptor.
+ * @param {number} target GL target descriptor.
  * @param {!(Float32Array|Uint16Array)} data Data as typed array.
  * @return {!WebGLBuffer} GL buffer object.
  * @private

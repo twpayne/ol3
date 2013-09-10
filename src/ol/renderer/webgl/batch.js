@@ -41,7 +41,7 @@ ol.renderer.webgl.batch.ControlStream;
 /**
  * Control stream instruction.
  *
- * @enum {!number}
+ * @enum {number}
  */
 ol.renderer.webgl.batch.ControlStreamInstruction = {
   /**
@@ -75,7 +75,7 @@ ol.renderer.webgl.batch.ControlStreamInstruction = {
  * Type of render.
  * Enumeration of concrete classes derived from Render.
  *
- * @enum {!number}
+ * @enum {number}
  * @see {ol.renderer.webgl.Render}
  */
 ol.renderer.webgl.batch.ControlStreamRenderType = {

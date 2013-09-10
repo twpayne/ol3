@@ -27,10 +27,10 @@ goog.require('ol.renderer.webgl.highPrecision');
  * Create a BatchBuilder.
  *
  * @constructor
- * @param {!number} maxStraightAngle maxium angle in degrees (0..180)
+ * @param {number} maxStraightAngle maxium angle in degrees (0..180)
  *      between adjacent lines in a line string that are joined directly -
  *      sharper joins are beveled or broken.
- * @param {!number} maxBevelAngle maximum angle in degrees (0..180) between
+ * @param {number} maxBevelAngle maximum angle in degrees (0..180) between
  *      adjacent lines in a line string for which beveled joins are
  *      used - sharper joins are broken.
  */
@@ -89,7 +89,7 @@ ol.renderer.webgl.BatchBuilder.prototype.releaseBlueprint = function() {
 /**
  * Sets the style for line rendering.
  *
- * @param {!number} width Width of the line.
+ * @param {number} width Width of the line.
  * @param {!ol.Color} color Fill color and alpha.
  * @param {number=} opt_strokeWidth Fractional stroke width.
  * @param {ol.Color=} opt_strokeColor Stroke color (alpha is ignored
@@ -98,7 +98,7 @@ ol.renderer.webgl.BatchBuilder.prototype.releaseBlueprint = function() {
 ol.renderer.webgl.BatchBuilder.prototype.setLineStyle =
     function(width, color, opt_strokeWidth, opt_strokeColor) {
 
-  var /**@type{!number}*/ strokeWidth = (
+  var /**@type{number}*/ strokeWidth = (
       goog.math.clamp(opt_strokeWidth || 0, 0, 0.9999)),
       /**@type{!ol.Color}*/ strokeColor = opt_strokeColor || color;
 
@@ -118,8 +118,8 @@ ol.renderer.webgl.BatchBuilder.prototype.setLineStyle =
  * last coordinate in the range are equal.
  *
  * @param {!Array.<number>} coords Array of packed input coordinates.
- * @param {!number} offset Start index in input array.
- * @param {!number} end End index (exclusive).
+ * @param {number} offset Start index in input array.
+ * @param {number} end End index (exclusive).
  */
 ol.renderer.webgl.BatchBuilder.prototype.lineString =
     function(coords, offset, end) {
@@ -263,7 +263,7 @@ ol.renderer.webgl.BatchBuilder.prototype.lineString =
  * Set the style for polygon rendering.
  *
  * @param {!ol.Color} color Fill color and alpha.
- * @param {!number} antiAliasing Anti-Aliasing width used by the renderer.
+ * @param {number} antiAliasing Anti-Aliasing width used by the renderer.
  * @param {number=} opt_strokeWidth Stroke width in pixels.
  * @param {ol.Color=} opt_strokeColor Stroke color (alpha is ignored
  *    instead the opacity specified by the fill color is used).
@@ -300,7 +300,7 @@ ol.renderer.webgl.BatchBuilder.prototype.setPolygonStyle =
  * The first contour given defines the outside of the polygon
  * further contours define holes.
  *
- * @param {!Array.<!Array.<!number>>} contours Contours in CCW winding.
+ * @param {!Array.<!Array.<number>>} contours Contours in CCW winding.
  */
 ol.renderer.webgl.BatchBuilder.prototype.polygon = function(contours) {
 
@@ -334,7 +334,7 @@ ol.renderer.webgl.BatchBuilder.prototype.polygon = function(contours) {
 /**
  * Offsets within vertex layout.
  *
- * @enum {!number}
+ * @enum {number}
  * @protected
  */
 ol.renderer.webgl.BatchBuilder.Offset = {
@@ -354,7 +354,7 @@ ol.renderer.webgl.BatchBuilder.Offset = {
 
 /**
  * Edge control flags as processed by the vertex shader.
- * @enum {!number}
+ * @enum {number}
  * @private
  */
 ol.renderer.webgl.BatchBuilder.SurfaceFlags_ = {
@@ -387,8 +387,8 @@ ol.renderer.webgl.BatchBuilder.SurfaceFlags_ = {
  * Scan along the left edge of a line and feed the coordinates to the
  * tesselator, disambiguating redundant vertices.
  *
- * @param {!number} startOffset Vertex buffer start offset.
- * @param {!number} startIndex Index of the first vertex in the buffer.
+ * @param {number} startOffset Vertex buffer start offset.
+ * @param {number} startIndex Index of the first vertex in the buffer.
  * @private
  */
 ol.renderer.webgl.BatchBuilder.prototype.tesseLeftEdge_ =
@@ -456,7 +456,7 @@ ol.renderer.webgl.BatchBuilder.prototype.tesseLeftEdge_ =
 /**
  * Tiny displacement used to disambiguate redundant vertices for
  * tesselation.
- * @type {!number}
+ * @type {number}
  * @const
  * @private
  */
@@ -469,9 +469,9 @@ ol.renderer.webgl.BatchBuilder.EPSILON_DISAMBIG_ = 0.0009765625;
  * may be negative to adjust the winding on the fly.
  *
  * @param {!Array.<number>} coords Array of packed input coordinates.
- * @param {!number} offset Start index in input array.
- * @param {!number} stride Distance of coordinates in the array.
- * @param {!number} end End index (exclusive).
+ * @param {number} offset Start index in input array.
+ * @param {number} stride Distance of coordinates in the array.
+ * @param {number} end End index (exclusive).
  * @private
  */
 ol.renderer.webgl.BatchBuilder.prototype.expandLinearRing_ =
@@ -516,16 +516,16 @@ ol.renderer.webgl.BatchBuilder.prototype.expandLinearRing_ =
  * indices for a partial line string.
  *
  * @param {!Array.<number>} coords Input coordinates.
- * @param {!number} offset Start offset into the input array.
- * @param {!number} stride Distance between adjacent coordinates.
- * @param {!number} end Exclusive end posision in input array.
- * @param {!number} offsetOfPrevious Offset of the coordinate before
+ * @param {number} offset Start offset into the input array.
+ * @param {number} stride Distance between adjacent coordinates.
+ * @param {number} end Exclusive end posision in input array.
+ * @param {number} offsetOfPrevious Offset of the coordinate before
  *     the first.
- * @param {!number} offsetOfNext Offset of the coordinate after the
+ * @param {number} offsetOfNext Offset of the coordinate after the
  *     last.
- * @param {!number} index Index of first vertex to be emitted.
+ * @param {number} index Index of first vertex to be emitted.
  * @param {number=} opt_forceIndex Index used to close rings.
- * @return {!number} The next vertex index unless 'opt_forceIndex'
+ * @return {number} The next vertex index unless 'opt_forceIndex'
  *     is given - equal to 'opt_forceIndex' in this case.
  * @private
  */
@@ -731,8 +731,8 @@ ol.renderer.webgl.BatchBuilder.prototype.emitLineJunctions_ =
  *
  * @param {!Array.<number>} dst Destination array.
  * @param {!Array.<number>} coords Flat array of input coordinates.
- * @param {!number} iFrom Index of first vector.
- * @param {!number} iTo Index of second vector.
+ * @param {number} iFrom Index of first vector.
+ * @param {number} iTo Index of second vector.
  * @private
  */
 ol.renderer.webgl.BatchBuilder.determineEdgeTangent_ =
@@ -751,9 +751,9 @@ ol.renderer.webgl.BatchBuilder.determineEdgeTangent_ =
  *
  * @param {!Array.<number>} dst Destination array.
  * @param {!Array.<number>} vertices Flat array of input coordinates.
- * @param {!number} offsFirst Index offset of first coordinate vector.
- * @param {!number} offsSecond Index offset of second coordinate vector.
- * @param {!number} x Interpolation parameter.
+ * @param {number} offsFirst Index offset of first coordinate vector.
+ * @param {number} offsSecond Index offset of second coordinate vector.
+ * @param {number} x Interpolation parameter.
  * @private
  */
 ol.renderer.webgl.BatchBuilder.lerpVertexCoord_ =
@@ -801,11 +801,11 @@ ol.renderer.webgl.BatchBuilder.halfwayDirection_ = function(dst, a, b) {
  * their control flags.
  *
  * @param {!Array.<number>} vertices Destination array.
- * @param {!number} x X-component of coordinate.
- * @param {!number} y Y-component of coordinate.
- * @param {!number} flagsA Flags for first vertex in triple.
- * @param {!number} flagsB Flags for second vertex in triple.
- * @param {!number} flagsC Flags for third vertex in triple.
+ * @param {number} x X-component of coordinate.
+ * @param {number} y Y-component of coordinate.
+ * @param {number} flagsA Flags for first vertex in triple.
+ * @param {number} flagsB Flags for second vertex in triple.
+ * @param {number} flagsC Flags for third vertex in triple.
  * @private
  */
 ol.renderer.webgl.BatchBuilder.emitTripleVertex_ =
@@ -836,10 +836,10 @@ ol.renderer.webgl.BatchBuilder.emitTripleVertex_ =
  * Emit triangle indexes for a quad.
  *
  * @param {!Array.<number>} indices Destination array to append to.
- * @param {!number} iInL Incoming "left edge" index.
- * @param {!number} iInR Incoming "right edge" index.
- * @param {!number} iOutL Outgoing "left edge" index.
- * @param {!number} iOutR Outgoing "right edge" index.
+ * @param {number} iInL Incoming "left edge" index.
+ * @param {number} iInR Incoming "right edge" index.
+ * @param {number} iOutL Outgoing "left edge" index.
+ * @param {number} iOutR Outgoing "right edge" index.
  * @private
  */
 ol.renderer.webgl.BatchBuilder.emitQuadIndices_ =
@@ -858,7 +858,7 @@ ol.renderer.webgl.BatchBuilder.emitQuadIndices_ =
  * Encode a color (without alpha) in a floatingpoint value.
  *
  * @param {!ol.Color} color Color to encode.
- * @return {!number} Encoded red, green and blue component (8 bit each).
+ * @return {number} Encoded red, green and blue component (8 bit each).
  * @private
  */
 ol.renderer.webgl.BatchBuilder.encodeRGB_ = function(color) {
@@ -875,7 +875,7 @@ ol.renderer.webgl.BatchBuilder.encodeRGB_ = function(color) {
 /**
  * Record indexes from the tesselator.
  *
- * @param {!number} index - Vertex index (second argument to gluTessVertex).
+ * @param {number} index - Vertex index (second argument to gluTessVertex).
  * @param {!Array.<number>} indices - Destination array for vertex indices.
  * @private
  */
@@ -959,14 +959,14 @@ ol.renderer.webgl.BatchBuilder.prototype.reset_ = function() {
    * Next vertex index (== number of vertices emitted since the
    * point in the control stream where the vertex buffer offset
    * has been set).
-   * @type {!number}
+   * @type {number}
    * @private
    */
   this.nextVertexIndex_ = 0;
 
   /**
    * Indices covered by draw calls emitted to the control stream.
-   * @type {!number}
+   * @type {number}
    * @private
    */
   this.nIndicesFlushed_ = 0;
@@ -1009,11 +1009,11 @@ ol.renderer.webgl.BatchBuilder.prototype.requestConfig_ =
 /**
  * Request a style vector to be set for a specific configuration.
  *
- * @param {!number} render Index of renderer configuration.
- * @param {!number} s First component of style vector.
- * @param {!number} t Second component of style vector.
- * @param {!number} p Third component of style vector.
- * @param {!number} q Fourth component of style vector.
+ * @param {number} render Index of renderer configuration.
+ * @param {number} s First component of style vector.
+ * @param {number} t Second component of style vector.
+ * @param {number} p Third component of style vector.
+ * @param {number} q Fourth component of style vector.
  * @private
  */
 ol.renderer.webgl.BatchBuilder.prototype.setStyle_ =

@@ -4,9 +4,9 @@ goog.provide('ol.renderer.webgl.testData');
 /**
  * Returns a contour of france for testing.
  *
- * @param {!number} scale Scale.
- * @param {!number} translateX Translation along the X-axis.
- * @param {!number} translateY Translation along the Y-axis.
+ * @param {number} scale Scale.
+ * @param {number} translateX Translation along the X-axis.
+ * @param {number} translateY Translation along the Y-axis.
  * @return {Array.<number>}
  */
 ol.renderer.webgl.testData.france = function(scale, translateX, translateY) {

@@ -20,7 +20,7 @@ goog.provide('ol.renderer.webgl.Render');
 ol.renderer.webgl.Render = function(type, program, vertexBufferFormat) {
 
   /**
-   * @type {!number}
+   * @type {number}
    */
   this.type = type;
 
@@ -43,9 +43,9 @@ ol.renderer.webgl.Render = function(type, program, vertexBufferFormat) {
  * @param {!WebGLRenderingContext} gl GL.
  * @param {!ol.renderer.webgl.batch.ControlStream} controlStream
  *      Control stream.
- * @param {!number} offset Start index of the encoded style values in the
+ * @param {number} offset Start index of the encoded style values in the
  *      control stream.
- * @return {!number} Control stream index pointing to the last consumed
+ * @return {number} Control stream index pointing to the last consumed
  *      style value.
  */
 ol.renderer.webgl.Render.prototype.setStyle = goog.abstractMethod;
@@ -80,7 +80,7 @@ ol.renderer.webgl.Render.Parameters = undefined;
 /**
  * Semantic indices of the elements in the parameter vector.
  *
- * @enum {!number}
+ * @enum {number}
  */
 ol.renderer.webgl.Render.Parameter = {
   /**
