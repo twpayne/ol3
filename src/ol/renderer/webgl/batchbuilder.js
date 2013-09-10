@@ -894,6 +894,7 @@ ol.renderer.webgl.BatchBuilder.tessErrorCallback_ = function(errno) {
   var name = '';
   if (goog.DEBUG) {
     // Only attempt to find symbol in debug mode.
+    // FIXME this does not work in ADVANCED mode
 
     for (var key in libtess.errorType) {
       if (libtess.errorType[key] == errno) {
