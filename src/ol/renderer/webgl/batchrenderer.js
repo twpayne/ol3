@@ -70,7 +70,7 @@ ol.renderer.webgl.BatchRenderer.prototype.registerRender =
  * Should be called when done rendering so all previsouly enabled
  * vertex attribute arrays are disabled again.
  *
- * @param {!WebGLRenderingContext} gl GL.
+ * @param {WebGLRenderingContext} gl GL.
  */
 ol.renderer.webgl.BatchRenderer.prototype.reset = function(gl) {
 
@@ -132,7 +132,7 @@ ol.renderer.webgl.BatchRenderer.DEFAULT_PARAM_VECTOR_ = [
  * Creates a batch from a blueprint, uploading the contained data to
  * the GL.
  *
- * @param {!WebGLRenderingContext} gl GL.
+ * @param {WebGLRenderingContext} gl GL.
  * @param {!ol.renderer.webgl.batch.Blueprint} blueprint Batch blueprint.
  * @return {!ol.renderer.webgl.Batch}
  */
@@ -153,7 +153,7 @@ ol.renderer.webgl.BatchRenderer.upload = function(gl, blueprint) {
 /**
  * Frees resources associated with a batch.
  *
- * @param {!WebGLRenderingContext} gl GL.
+ * @param {WebGLRenderingContext} gl GL.
  * @param {!ol.renderer.webgl.Batch} batch Batch.
  */
 ol.renderer.webgl.BatchRenderer.unload = function(gl, batch) {
@@ -167,7 +167,7 @@ ol.renderer.webgl.BatchRenderer.unload = function(gl, batch) {
 /**
  * Render a batch.
  *
- * @param {!WebGLRenderingContext} gl GL.
+ * @param {WebGLRenderingContext} gl GL.
  * @param {!ol.renderer.webgl.Batch} batch The batch to render.
  */
 ol.renderer.webgl.BatchRenderer.prototype.render = function(gl, batch) {
@@ -228,7 +228,7 @@ ol.renderer.webgl.BatchRenderer.prototype.render = function(gl, batch) {
 
 
 /**
- * @param {!WebGLRenderingContext} gl GL.
+ * @param {WebGLRenderingContext} gl GL.
  * @param {!ol.renderer.webgl.Render} render
  * @private
  */
@@ -266,7 +266,7 @@ ol.renderer.webgl.BatchRenderer.prototype.activateRender_ =
  * Disables all vertex attribute arrays used by the currently active
  * render.
  *
- * @param {!WebGLRenderingContext} gl GL.
+ * @param {WebGLRenderingContext} gl GL.
  * @private
  */
 ol.renderer.webgl.BatchRenderer.prototype.disableVertexAttribArrays_ =
@@ -284,7 +284,7 @@ ol.renderer.webgl.BatchRenderer.prototype.disableVertexAttribArrays_ =
 /**
  * Configure the layout of a vertex buffer.
  *
- * @param {!WebGLRenderingContext} gl GL.
+ * @param {WebGLRenderingContext} gl GL.
  * @param {!ol.renderer.webgl.Render.VertexBufferFormat} fmt Buffer format.
  * @param {number} offset Byte offset within the vertex buffer.
  * @private
@@ -303,10 +303,10 @@ ol.renderer.webgl.BatchRenderer.setVertexBufferFormat_ =
 /**
  * Create and populate WebGL buffer.
  *
- * @param {!WebGLRenderingContext} gl GL.
+ * @param {WebGLRenderingContext} gl GL.
  * @param {number} target GL target descriptor.
  * @param {!(Float32Array|Uint16Array)} data Data as typed array.
- * @return {!WebGLBuffer} GL buffer object.
+ * @return {WebGLBuffer} GL buffer object.
  * @private
  */
 ol.renderer.webgl.BatchRenderer.glBuffer_ = function(gl, target, data) {

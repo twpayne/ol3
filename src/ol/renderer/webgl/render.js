@@ -13,7 +13,7 @@ goog.provide('ol.renderer.webgl.Render');
  *
  * @constructor
  * @param {!ol.renderer.webgl.batch.ControlStreamRenderType} type ID.
- * @param {!WebGLProgram} program Rendering pipeline to use.
+ * @param {WebGLProgram} program Rendering pipeline to use.
  * @param {!ol.renderer.webgl.Render.VertexBufferFormat}
  *     vertexBufferFormat Vertex array layout.
  */
@@ -25,7 +25,7 @@ ol.renderer.webgl.Render = function(type, program, vertexBufferFormat) {
   this.type = type;
 
   /**
-   * @type {!WebGLProgram}
+   * @type {WebGLProgram}
    */
   this.program = program;
 
@@ -40,7 +40,7 @@ ol.renderer.webgl.Render = function(type, program, vertexBufferFormat) {
 /**
  * Set style.
  *
- * @param {!WebGLRenderingContext} gl GL.
+ * @param {WebGLRenderingContext} gl GL.
  * @param {!ol.renderer.webgl.batch.ControlStream} controlStream
  *      Control stream.
  * @param {number} offset Start index of the encoded style values in the
@@ -54,7 +54,7 @@ ol.renderer.webgl.Render.prototype.setStyle = goog.abstractMethod;
 /**
  * Set uniforms.
  *
- * @param {!WebGLRenderingContext} gl GL.
+ * @param {WebGLRenderingContext} gl GL.
  * @param {!ol.renderer.webgl.Render.Parameters} params Parameters.
  */
 ol.renderer.webgl.Render.prototype.setUniforms = goog.abstractMethod;

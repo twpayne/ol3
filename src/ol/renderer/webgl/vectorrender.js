@@ -14,7 +14,7 @@ goog.require('ol.renderer.webgl.Render');
  * @extends {ol.renderer.webgl.Render}
  * @constructor
  * @param {!ol.renderer.webgl.batch.ControlStreamRenderType} type
- * @param {!WebGLProgram} program GL program.
+ * @param {WebGLProgram} program GL program.
  * @param {!Object} locations Program locations.
  */
 ol.renderer.webgl.VectorRender = function(type, program, locations) {

@@ -230,16 +230,16 @@ ol.renderer.webgl.VectorLayer2.prototype.prepareBatchRenderer_ =
     function() {
 
   var mapRenderer = this.getWebGLMapRenderer();
-  var gl = /**@type{!WebGLRenderingContext}*/ (mapRenderer.getGL());
+  var gl = mapRenderer.getGL();
 
   // Eventually create batch renderer
 
   var batchRenderer = this.batchRenderer_;
   if (goog.isNull(batchRenderer)) {
 
-    var program = /**@type{!WebGLProgram}*/(mapRenderer.getProgram(
+    var program = mapRenderer.getProgram(
         new ol.renderer.webgl.VectorRenderShaderFragment(gl),
-        new ol.renderer.webgl.VectorRenderShaderVertex(gl)));
+        new ol.renderer.webgl.VectorRenderShaderVertex(gl));
     var locations = new ol.renderer.webgl.
         VectorRenderShader.Locations(gl, program);
 
