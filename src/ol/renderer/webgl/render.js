@@ -66,7 +66,7 @@ ol.renderer.webgl.Render.prototype.setUniforms = goog.abstractMethod;
  *
  * @typedef {!Array.<!Array>}
  */
-ol.renderer.webgl.Render.VertexBufferFormat = undefined;
+ol.renderer.webgl.Render.VertexBufferFormat;
 
 
 /**
@@ -74,7 +74,7 @@ ol.renderer.webgl.Render.VertexBufferFormat = undefined;
  *
  * @typedef {Array}
  */
-ol.renderer.webgl.Render.Parameters = undefined;
+ol.renderer.webgl.Render.Parameters;
 
 
 /**
