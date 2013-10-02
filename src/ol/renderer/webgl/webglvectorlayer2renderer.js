@@ -133,13 +133,14 @@ ol.renderer.webgl.VectorLayer2.prototype.renderLineStringCollections =
     function(lineStringCollections) {
 
   var mapRenderer = this.getWebGLMapRenderer();
+  var context = mapRenderer.getContext();
   var gl = mapRenderer.getGL();
 
   var fragmentShader = ol.renderer.webgl.vectorlayer2.shader.
       LineStringCollectionFragment.getInstance();
   var vertexShader = ol.renderer.webgl.vectorlayer2.shader.
       LineStringCollectionVertex.getInstance();
-  var program = mapRenderer.getProgram(fragmentShader, vertexShader);
+  var program = context.getProgram(fragmentShader, vertexShader);
   gl.useProgram(program);
   if (goog.isNull(this.lineStringCollectionLocations_)) {
     this.lineStringCollectionLocations_ =
@@ -155,9 +156,9 @@ ol.renderer.webgl.VectorLayer2.prototype.renderLineStringCollections =
     lineStringCollection = lineStringCollections[i];
     buf = lineStringCollection.buf;
     dim = lineStringCollection.dim;
-    mapRenderer.bindBuffer(goog.webgl.ARRAY_BUFFER, buf);
+    context.bindBuffer(goog.webgl.ARRAY_BUFFER, buf);
     // FIXME re-use index buffer
-    // FIXME use mapRenderer.bindBuffer
+    // FIXME use context.bindBuffer
     indices = lineStringCollection.getIndices();
     indexBuffer = gl.createBuffer();
     gl.bindBuffer(goog.webgl.ELEMENT_ARRAY_BUFFER, indexBuffer);
@@ -183,13 +184,14 @@ ol.renderer.webgl.VectorLayer2.prototype.renderPointCollections =
     function(pointCollections) {
 
   var mapRenderer = this.getWebGLMapRenderer();
+  var context = mapRenderer.getContext();
   var gl = mapRenderer.getGL();
 
   var fragmentShader = ol.renderer.webgl.vectorlayer2.shader.
       PointCollectionFragment.getInstance();
   var vertexShader = ol.renderer.webgl.vectorlayer2.shader.
       PointCollectionVertex.getInstance();
-  var program = mapRenderer.getProgram(fragmentShader, vertexShader);
+  var program = context.getProgram(fragmentShader, vertexShader);
   gl.useProgram(program);
   if (goog.isNull(this.pointCollectionLocations_)) {
     this.pointCollectionLocations_ =
@@ -205,7 +207,7 @@ ol.renderer.webgl.VectorLayer2.prototype.renderPointCollections =
     pointCollection = pointCollections[i];
     buf = pointCollection.buf;
     dim = pointCollection.dim;
-    mapRenderer.bindBuffer(goog.webgl.ARRAY_BUFFER, buf);
+    context.bindBuffer(goog.webgl.ARRAY_BUFFER, buf);
     gl.enableVertexAttribArray(this.pointCollectionLocations_.a_position);
     gl.vertexAttribPointer(this.pointCollectionLocations_.a_position, 2,
         goog.webgl.FLOAT, false, 4 * dim, 0);
