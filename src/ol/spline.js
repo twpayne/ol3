@@ -1,8 +1,11 @@
+goog.provide('spline');
+
+
 /**
  * @param {{time: Array.<number>, ref: Array.<number>}} options
  * @return {function(number): number}
  */
-var makeInterpolator = function(options) {
+spline.makeInterpolator = function(options) {
 
   /* Initialise variables */
   
