@@ -375,6 +375,7 @@ def build_lint_src_timestamp(t):
     t.run('%(GJSLINT)s',
           '--jslint_error=all',
           '--custom_jsdoc_tags=todo',
+          '--disable=110',
           '--strict',
           t.newer(t.dependencies))
     t.touch()
