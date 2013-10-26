@@ -10,6 +10,12 @@ goog.require('ol.source.BingMaps');
 goog.require('spline');
 
 
+/**
+ * @const {number}
+ */
+var ZOOM_OFFSET = -3;
+
+
 var map = new ol.Map({
   controls: ol.control.defaults({
     attribution: false,
@@ -27,8 +33,8 @@ var map = new ol.Map({
   renderer: ol.RendererHint.WEBGL,
   target: 'map',
   view: new ol.View2D({
-    center: [0, 0],
-    zoom: 2
+    center: ol.proj.transform([9.187088, 47.688648], 'EPSG:4326', 'EPSG:3857'),
+    zoom: 17 + ZOOM_OFFSET
   })
 });
 
@@ -48,7 +54,7 @@ var transpose = function(waypoints) {
     lats.push(point['lat']);
     lngs.push(point['long']);
     angles.push(point['angle']);
-    zooms.push(point['zoom']);
+    zooms.push(point['zoom'] + ZOOM_OFFSET);
   };
   return {
     times: times,
