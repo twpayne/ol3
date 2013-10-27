@@ -39,6 +39,11 @@ spline.makeInterpolator = function(options) {
 
   return function(ref_time) {
 
+    if(ref_time < time[0])
+    {
+        return ref[0];
+    }
+  
     while (ref_time >= time[seg_idx])      // while time exceeds end of segment
     {
       if (++seg_idx >= n_elements)                 // If vector complete
@@ -81,39 +86,15 @@ spline.makeInterpolator = function(options) {
 
       // Calculate gradients for start and end of segment
 
-      if (grad_seg == 0.0)                                 // If current segment is flat
-      {
-        grad_start = 0.0;                                 // start and end gradients are zero
-        grad_end = 0.0;
-      }
-      else                                                // else current segment is not flat
-      {
-        if (grad_prev == 0.0 ||                                  // If previous segment is flat, or
-            grad_prev * grad_seg < 0.0)                          // gradient changes sign
-        {
-          grad_start = 0.0;                                     // start gradient is zero
-        }
-        else                                                    // else gradients are same sign
-        {
-          weight = (time[seg_idx - 1] - time[seg_idx - 2]) /
-              (time[seg_idx] - time[seg_idx - 2]);
+      weight = (time[seg_idx - 1] - time[seg_idx - 2]) /
+          (time[seg_idx] - time[seg_idx - 2]);
 
-          grad_start = weight * (grad_seg - grad_prev) + grad_prev;
-        }
+      grad_start = weight * (grad_seg - grad_prev) + grad_prev;
 
-        if (grad_next == 0.0 ||                                  // If next segment is flat, or
-            grad_next * grad_seg < 0.0)                          // gradient changes sign
-        {
-          grad_end = 0.0;                                     // end gradient is zero
-        }
-        else                                                    // else gradients are same sign
-        {
-          weight = (time[seg_idx + 1] - time[seg_idx]) /
+      weight = (time[seg_idx + 1] - time[seg_idx]) /
               (time[seg_idx + 1] - time[seg_idx - 1]);
 
-          grad_end = weight * (grad_seg - grad_next) + grad_next;
-        }
-      }
+      grad_end = weight * (grad_seg - grad_next) + grad_next;
 
       // Calculate time and gradient of spline connection point
 
