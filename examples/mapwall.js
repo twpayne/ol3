@@ -10,14 +10,41 @@ goog.require('ol.layer.Tile');
 goog.require('ol.proj');
 goog.require('ol.proj.EPSG3857');
 goog.require('ol.source.BingMaps');
+goog.require('ol.source.OSM');
+goog.require('ol.source.TileDebug');
 goog.require('spline');
 
 
 /**
  * @const {number}
  */
-var ZOOM_OFFSET = -3;
+var ZOOM_OFFSET = -1;
 
+var Z0 = 1;
+var R0 = 2 * ol.proj.EPSG3857.HALF_SIZE / (ol.DEFAULT_TILE_SIZE * Math.pow(2, Z0));
+
+
+var query = goog.global.location.search.substring(1);
+var queryData = new goog.Uri.QueryData(query);
+var x = Number(queryData.get('x', 0));
+var y = Number(queryData.get('y', 0));
+var d = Number(queryData.get('d', 0.04));
+var n = Number(queryData.get('n', 1));
+var nominalResolution = 256 / 0.04; // Nexus 7
+var deviceResolution = (n * 256) / d;
+
+var osmLayer = new ol.layer.Tile({
+  source: new ol.source.OSM()
+});
+
+var tileDebugLayer = new ol.layer.Tile({
+  source: new ol.source.TileDebug({
+    projection: 'EPSG:3857',
+    tileGrid: new ol.tilegrid.XYZ({
+      maxZoom: 22
+    })
+  })
+});
 
 var map = new ol.Map({
   controls: ol.control.defaults({
@@ -31,25 +58,18 @@ var map = new ol.Map({
         key: 'Ak-dzM4wZjSqTlzveKz5u0d4IQ4bRzVI309GxmkgSVr1ewS6iPSrOvOKhA-CJlm3',
         style: 'Aerial'
       })
-    })
+    }),
+    osmLayer,
+    tileDebugLayer
   ],
   renderer: ol.RendererHint.WEBGL,
   target: 'map',
   view: new ol.View2D({
-    center: ol.proj.transform([9.187088, 47.688648], 'EPSG:4326', 'EPSG:3857'),
-    zoom: 17 + ZOOM_OFFSET
+    center: [0, 0],
+    resolution: nominalResolution / deviceResolution,
+    zoom: 1
   })
 });
-
-
-var query = goog.global.location.search.substring(1);
-var queryData = new goog.Uri.QueryData(query);
-var x = Number(queryData.get('x', 0));
-var y = Number(queryData.get('y', 0));
-var d = Number(queryData.get('d', 0.04));
-var n = Number(queryData.get('n', 1));
-var nominalResolution = 256 / 0.04; // Nexus 7
-var deviceResolution = (n * 256) / d;
 
 
 var transpose = function(waypoints) {
@@ -122,6 +142,8 @@ var ws = new goog.net.WebSocket();
 ws.open('ws://134.34.14.49:8080/ws');
 var eh = new goog.events.EventHandler();
 eh.listen(ws, goog.net.WebSocket.EventType.MESSAGE, function(event) {
+    osmLayer.setVisible(false);
+    tileDebugLayer.setVisible(false);
     start = goog.now();
     map.beforeRender(animate);
 }, false, this);
