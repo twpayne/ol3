@@ -1,3 +1,4 @@
+goog.require('goog.Uri.QueryData');
 goog.require('goog.net.WebSocket');
 goog.require('goog.events.EventHandler');
 goog.require('ol.Map');
@@ -41,6 +42,16 @@ var map = new ol.Map({
 });
 
 
+var query = goog.global.location.search.substring(1);
+var queryData = new goog.Uri.QueryData(query);
+var x = Number(queryData.get('x', 0));
+var y = Number(queryData.get('y', 0));
+var d = Number(queryData.get('d', 0.04));
+var n = Number(queryData.get('n', 1));
+var nominalResolution = 256 / 0.04; // Nexus 7
+var deviceResolution = (n * 256) / d;
+
+
 var transpose = function(waypoints) {
   var points = waypoints['points'];
   var n = points.length;
@@ -72,8 +83,8 @@ var duration = (2 * 60 + 15) * 1000;
 var animate = goog.nullFunction();
 
 goog.net.XhrIo.send('waypoints.json', function(event) {
-  var x = /** @type {goog.net.XhrIo} */ (event.target);
-  var waypoints = x.getResponseJson();
+  var xhrio = /** @type {goog.net.XhrIo} */ (event.target);
+  var waypoints = xhrio.getResponseJson();
 
   var data = transpose(waypoints);
   var latF = spline.makeInterpolator({time: data.times, ref: data.lats});
@@ -88,13 +99,17 @@ goog.net.XhrIo.send('waypoints.json', function(event) {
       var lat = latF(frameState.time - start);
       var lng = lngF(frameState.time - start);
       var zoom = zoomF(frameState.time - start);
-      var rotation = angleF(frameState.time - start);
+      var rotation = 0;//-angleF(frameState.time - start); // FIXME
       var center = ol.proj.transform([lng, lat], 'EPSG:4326', 'EPSG:3857');
       var resolution = 2 * ol.proj.EPSG3857.HALF_SIZE /
           (ol.DEFAULT_TILE_SIZE * Math.pow(2, zoom));
+      var dXi = resolution * x * nominalResolution;
+      var dYi = resolution * y * nominalResolution;
+      center[0] += dXi;
+      center[1] += dYi;
       frameState.animate = true;
       frameState.view2DState.center = center;
-      frameState.view2DState.resolution = resolution;
+      frameState.view2DState.resolution = resolution * nominalResolution / deviceResolution;
       frameState.view2DState.rotation = Math.PI * rotation / 180;
       frameState.viewHints[ol.ViewHint.ANIMATING] += 1;
     }
