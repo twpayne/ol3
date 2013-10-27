@@ -20,7 +20,7 @@ goog.require('spline');
  */
 var ZOOM_OFFSET = -1;
 
-var Z0 = 1;
+var Z0 = 4;
 var R0 = 2 * ol.proj.EPSG3857.HALF_SIZE / (ol.DEFAULT_TILE_SIZE * Math.pow(2, Z0));
 
 
@@ -65,8 +65,8 @@ var map = new ol.Map({
   renderer: ol.RendererHint.WEBGL,
   target: 'map',
   view: new ol.View2D({
-    center: [0, 0],
-    resolution: nominalResolution / deviceResolution,
+    center: [R0 * x * nominalResolution, R0 * y * nominalResolution],
+    resolution: R0 * nominalResolution / deviceResolution,
     zoom: 1
   })
 });
