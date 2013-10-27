@@ -86,16 +86,30 @@ spline.makeInterpolator = function(options) {
 
       // Calculate gradients for start and end of segment
 
-      weight = (time[seg_idx - 1] - time[seg_idx - 2]) /
-          (time[seg_idx] - time[seg_idx - 2]);
+      if(seg_idx == 1) 
+      {
+        grad_start = 0.0;
+      }
+      else 
+      {
+          weight = (time[seg_idx - 1] - time[seg_idx - 2]) /
+              (time[seg_idx] - time[seg_idx - 2]);
 
-      grad_start = weight * (grad_seg - grad_prev) + grad_prev;
+          grad_start = weight * (grad_seg - grad_prev) + grad_prev;
+      }
 
-      weight = (time[seg_idx + 1] - time[seg_idx]) /
-              (time[seg_idx + 1] - time[seg_idx - 1]);
+      if(seg_idx == (n_elements - 1)) 
+      {
+        grad_end = 0.0;
+      }
+      else 
+      {
+        weight = (time[seg_idx + 1] - time[seg_idx]) /
+                 (time[seg_idx + 1] - time[seg_idx - 1]);
 
-      grad_end = weight * (grad_seg - grad_next) + grad_next;
-
+        grad_end = weight * (grad_seg - grad_next) + grad_next;
+      }
+      
       // Calculate time and gradient of spline connection point
 
       delta_grad = grad_end - grad_start;     // Change in start and end gradients
