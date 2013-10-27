@@ -1,3 +1,5 @@
+goog.require('goog.net.WebSocket');
+goog.require('goog.events.EventHandler');
 goog.require('ol.Map');
 goog.require('ol.RendererHint');
 goog.require('ol.View2D');
@@ -65,25 +67,21 @@ var transpose = function(waypoints) {
   };
 };
 
+var start = goog.now();
+var duration = (2 * 60 + 15) * 1000;
+var animate = goog.nullFunction();
 
 goog.net.XhrIo.send('waypoints.json', function(event) {
   var x = /** @type {goog.net.XhrIo} */ (event.target);
   var waypoints = x.getResponseJson();
 
-  var start = goog.now();
-  var duration = (2 * 60 + 15) * 1000;
   var data = transpose(waypoints);
   var latF = spline.makeInterpolator({time: data.times, ref: data.lats});
   var lngF = spline.makeInterpolator({time: data.times, ref: data.lngs});
   var angleF = spline.makeInterpolator({time: data.times, ref: data.angles});
   var zoomF = spline.makeInterpolator({time: data.times, ref: data.zooms});
 
-  /**
-   * @param {ol.Map} map Map.
-   * @param {?ol.FrameState} frameState Frame state.
-   * @return {boolean} Animate.
-   */
-  var animate = function(map, frameState) {
+  animate = function(map, frameState) {
     if (frameState.time - start > duration) {
       return false;
     } else if (!goog.isNull(frameState)) {
@@ -103,6 +101,12 @@ goog.net.XhrIo.send('waypoints.json', function(event) {
     return true;
   };
 
-  map.beforeRender(animate);
-
 });
+
+var ws = new goog.net.WebSocket();
+ws.open('ws://134.34.14.49:8080/ws');
+var eh = new goog.events.EventHandler();
+eh.listen(ws, goog.net.WebSocket.EventType.MESSAGE, function(event) {
+    start = goog.now();
+    map.beforeRender(animate);
+}, false, this);
