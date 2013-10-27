@@ -66,7 +66,7 @@ var transpose = function(waypoints) {
     times.push(1000 * point['time']);
     lats.push(point['lat']);
     lngs.push(point['long']);
-    angles.push(point['angle']);
+    angles.push(Math.PI * point['angle'] / 180);
     zooms.push(point['zoom'] + ZOOM_OFFSET);
   };
   return {
@@ -99,18 +99,18 @@ goog.net.XhrIo.send('waypoints.json', function(event) {
       var lat = latF(frameState.time - start);
       var lng = lngF(frameState.time - start);
       var zoom = zoomF(frameState.time - start);
-      var rotation = 0;//-angleF(frameState.time - start); // FIXME
+      var rotation = -angleF(frameState.time - start);
       var center = ol.proj.transform([lng, lat], 'EPSG:4326', 'EPSG:3857');
       var resolution = 2 * ol.proj.EPSG3857.HALF_SIZE /
           (ol.DEFAULT_TILE_SIZE * Math.pow(2, zoom));
       var dXi = resolution * x * nominalResolution;
       var dYi = resolution * y * nominalResolution;
-      center[0] += dXi;
-      center[1] += dYi;
+      center[0] += dXi * Math.cos(rotation) - dYi * Math.sin(rotation);
+      center[1] += dXi * Math.sin(rotation) + dYi * Math.cos(rotation);
       frameState.animate = true;
       frameState.view2DState.center = center;
       frameState.view2DState.resolution = resolution * nominalResolution / deviceResolution;
-      frameState.view2DState.rotation = Math.PI * rotation / 180;
+      frameState.view2DState.rotation = rotation;
       frameState.viewHints[ol.ViewHint.ANIMATING] += 1;
     }
     return true;
