@@ -141,7 +141,7 @@ ol.renderer.webgl.VectorLayer2.prototype.renderLineStringCollections =
   var vertexShader = ol.renderer.webgl.vectorlayer2.shader.
       LineStringCollectionVertex.getInstance();
   var program = context.getProgram(fragmentShader, vertexShader);
-  gl.useProgram(program);
+  context.useProgram(program);
   if (goog.isNull(this.lineStringCollectionLocations_)) {
     this.lineStringCollectionLocations_ =
         new ol.renderer.webgl.vectorlayer2.shader.LineStringCollection.
@@ -192,7 +192,7 @@ ol.renderer.webgl.VectorLayer2.prototype.renderPointCollections =
   var vertexShader = ol.renderer.webgl.vectorlayer2.shader.
       PointCollectionVertex.getInstance();
   var program = context.getProgram(fragmentShader, vertexShader);
-  gl.useProgram(program);
+  context.useProgram(program);
   if (goog.isNull(this.pointCollectionLocations_)) {
     this.pointCollectionLocations_ =
         new ol.renderer.webgl.vectorlayer2.shader.PointCollection.Locations(
