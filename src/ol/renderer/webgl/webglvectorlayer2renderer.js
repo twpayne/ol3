@@ -64,7 +64,7 @@ ol.renderer.webgl.VectorLayer2.prototype.handleWebGLContextLost = function() {
 /**
  * @inheritDoc
  */
-ol.renderer.webgl.VectorLayer2.prototype.renderFrame =
+ol.renderer.webgl.VectorLayer2.prototype.prepareFrame =
     function(frameState, layerState) {
 
   var mapRenderer = this.getWebGLMapRenderer();
