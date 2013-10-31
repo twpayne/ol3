@@ -14,7 +14,7 @@ goog.require('ol.layer.Vector');
 goog.require('ol.renderer.Map');
 goog.require('ol.renderer.canvas.ImageLayer');
 goog.require('ol.renderer.canvas.TileLayer');
-goog.require('ol.renderer.canvas.VectorLayer');
+goog.require('ol.renderer.canvas.VectorLayer2');
 goog.require('ol.size');
 goog.require('ol.source.State');
 
@@ -71,7 +71,7 @@ ol.renderer.canvas.Map.prototype.createLayerRenderer = function(layer) {
   } else if (layer instanceof ol.layer.Tile) {
     return new ol.renderer.canvas.TileLayer(this, layer);
   } else if (layer instanceof ol.layer.Vector) {
-    return new ol.renderer.canvas.VectorLayer(this, layer);
+    return new ol.renderer.canvas.VectorLayer2(this, layer);
   } else {
     goog.asserts.fail();
     return null;
