@@ -103,15 +103,16 @@ ol.renderer.canvas.Map.prototype.renderFrame = function(frameState) {
     return;
   }
 
+  var context = this.context_;
+
   var size = frameState.size;
   if (!ol.size.equals(this.canvasSize_, size)) {
     this.canvas_.width = size[0];
     this.canvas_.height = size[1];
     this.canvasSize_ = size;
+  } else {
+    context.clearRect(0, 0, size[0], size[1]);
   }
-
-  var context = this.context_;
-  context.clearRect(0, 0, size[0], size[1]);
 
   this.calculateMatrices2D(frameState);
 
