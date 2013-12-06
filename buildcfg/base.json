@@ -26,6 +26,9 @@
     "invalidCasts": "ERROR",
     "misplacedTypeAnnotation": "ERROR",
     "missingProperties": "ERROR",
+    "missingProvide": "ERROR",
+    "missingRequire": "ERROR",
+    "missingReturn": "ERROR",
     "nonStandardJsDocs": "ERROR",
     "strictModuleDepCheck": "ERROR",
     "suspiciousCode": "ERROR",
@@ -34,6 +37,7 @@
     "undefinedNames": "ERROR",
     "undefinedVars": "ERROR",
     "unknownDefines": "ERROR",
+    "unnecessaryCasts": "ERROR",
     "uselessCode": "ERROR",
     "violatedModuleDep": "ERROR",
     "visibility": "ERROR"
