@@ -17,7 +17,7 @@ goog.require('ol.extent');
 goog.require('ol.proj');
 goog.require('ol.source.State');
 goog.require('ol.source.TileImage');
-goog.require('ol.tilegrid.XYZ');
+goog.require('ol.tilegrid.MapBoxXYZ');
 
 
 /**
@@ -69,6 +69,10 @@ goog.inherits(ol.source.TileJSON, ol.source.TileImage);
 ol.source.TileJSON.prototype.handleTileJSONResponse = function() {
   var tileJSON = ol.tilejson.grids_.pop();
 
+  tileJSON.tiles = tileJSON.tiles.map(function(url) {
+    return url.replace('.png', '@2x.png');
+  });
+
   var epsg4326Projection = ol.proj.get('EPSG:4326');
 
   var extent;
@@ -84,7 +88,7 @@ ol.source.TileJSON.prototype.handleTileJSONResponse = function() {
   }
   var minZoom = tileJSON.minzoom || 0;
   var maxZoom = tileJSON.maxzoom || 22;
-  var tileGrid = new ol.tilegrid.XYZ({
+  var tileGrid = new ol.tilegrid.MapBoxXYZ({
     maxZoom: maxZoom,
     minZoom: minZoom
   });
