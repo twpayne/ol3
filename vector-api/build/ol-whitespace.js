@@ -21344,7 +21344,9 @@ ol.render.canvas.Immediate.prototype.drawImages_ = function(geometry) {
       y = y + 0.5 | 0
     }
     if(state.scale != 1 || state.rotation !== 0) {
-      ol.vec.Mat4.makeTransform2D(localTransform, x, y, state.scale, state.scale, state.rotation, -x, -y);
+      var centerX = x + state.anchorX;
+      var centerY = y + state.anchorY;
+      ol.vec.Mat4.makeTransform2D(localTransform, centerX, centerY, state.scale, state.scale, state.rotation, -centerX, -centerY);
       context.setTransform(goog.vec.Mat4.getElement(localTransform, 0, 0), goog.vec.Mat4.getElement(localTransform, 1, 0), goog.vec.Mat4.getElement(localTransform, 0, 1), goog.vec.Mat4.getElement(localTransform, 1, 1), goog.vec.Mat4.getElement(localTransform, 0, 3), goog.vec.Mat4.getElement(localTransform, 1, 3))
     }
     context.drawImage(state.image, x, y, state.width, state.height)
@@ -22075,7 +22077,9 @@ ol.render.canvas.Replay.prototype.replay_ = function(context, transform, renderG
                 y = y + 0.5 | 0
               }
               if(scale != 1 || rotation !== 0) {
-                ol.vec.Mat4.makeTransform2D(localTransform, x, y, scale, scale, rotation, -x, -y);
+                var centerX = x + anchorX;
+                var centerY = y + anchorY;
+                ol.vec.Mat4.makeTransform2D(localTransform, centerX, centerY, scale, scale, rotation, -centerX, -centerY);
                 context.setTransform(goog.vec.Mat4.getElement(localTransform, 0, 0), goog.vec.Mat4.getElement(localTransform, 1, 0), goog.vec.Mat4.getElement(localTransform, 0, 1), goog.vec.Mat4.getElement(localTransform, 1, 1), goog.vec.Mat4.getElement(localTransform, 0, 3), goog.vec.Mat4.getElement(localTransform, 1, 3))
               }
               context.drawImage(image, x, y, width, height);
@@ -22350,7 +22354,7 @@ ol.render.canvas.LineStringReplay.prototype.drawLineStringGeometry = function(li
   ol.extent.extend(this.extent_, lineStringGeometry.getExtent());
   this.setStrokeStyle_();
   this.beginGeometry(lineStringGeometry);
-  this.hitDetectionInstructions.push([ol.render.canvas.Instruction.BEGIN_PATH]);
+  this.hitDetectionInstructions.push([ol.render.canvas.Instruction.SET_STROKE_STYLE, state.strokeStyle, state.lineWidth, state.lineCap, state.lineJoin, state.miterLimit, state.lineDash], [ol.render.canvas.Instruction.BEGIN_PATH]);
   var flatCoordinates = lineStringGeometry.getFlatCoordinates();
   var stride = lineStringGeometry.getStride();
   this.drawFlatCoordinates_(flatCoordinates, 0, flatCoordinates.length, stride);
@@ -22367,8 +22371,8 @@ ol.render.canvas.LineStringReplay.prototype.drawMultiLineStringGeometry = functi
   }
   ol.extent.extend(this.extent_, multiLineStringGeometry.getExtent());
   this.setStrokeStyle_();
-  this.hitDetectionInstructions.push([ol.render.canvas.Instruction.BEGIN_PATH]);
   this.beginGeometry(multiLineStringGeometry);
+  this.hitDetectionInstructions.push([ol.render.canvas.Instruction.SET_STROKE_STYLE, state.strokeStyle, state.lineWidth, state.lineCap, state.lineJoin, state.miterLimit, state.lineDash], [ol.render.canvas.Instruction.BEGIN_PATH]);
   var ends = multiLineStringGeometry.getEnds();
   var flatCoordinates = multiLineStringGeometry.getFlatCoordinates();
   var stride = multiLineStringGeometry.getStride();

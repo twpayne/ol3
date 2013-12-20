@@ -227,8 +227,11 @@ ol.render.canvas.Replay.prototype.replay_ =
           y = (y + 0.5) | 0;
         }
         if (scale != 1 || rotation !== 0) {
+          var centerX = x + anchorX;
+          var centerY = y + anchorY;
           ol.vec.Mat4.makeTransform2D(
-              localTransform, x, y, scale, scale, rotation, -x, -y);
+              localTransform, centerX, centerY, scale, scale,
+              rotation, -centerX, -centerY);
           context.setTransform(
               goog.vec.Mat4.getElement(localTransform, 0, 0),
               goog.vec.Mat4.getElement(localTransform, 1, 0),
@@ -798,7 +801,11 @@ ol.render.canvas.LineStringReplay.prototype.drawLineStringGeometry =
   ol.extent.extend(this.extent_, lineStringGeometry.getExtent());
   this.setStrokeStyle_();
   this.beginGeometry(lineStringGeometry);
-  this.hitDetectionInstructions.push([ol.render.canvas.Instruction.BEGIN_PATH]);
+  this.hitDetectionInstructions.push(
+      [ol.render.canvas.Instruction.SET_STROKE_STYLE,
+       state.strokeStyle, state.lineWidth, state.lineCap, state.lineJoin,
+       state.miterLimit, state.lineDash],
+      [ol.render.canvas.Instruction.BEGIN_PATH]);
   var flatCoordinates = lineStringGeometry.getFlatCoordinates();
   var stride = lineStringGeometry.getStride();
   this.drawFlatCoordinates_(
@@ -822,8 +829,12 @@ ol.render.canvas.LineStringReplay.prototype.drawMultiLineStringGeometry =
   }
   ol.extent.extend(this.extent_, multiLineStringGeometry.getExtent());
   this.setStrokeStyle_();
-  this.hitDetectionInstructions.push([ol.render.canvas.Instruction.BEGIN_PATH]);
   this.beginGeometry(multiLineStringGeometry);
+  this.hitDetectionInstructions.push(
+      [ol.render.canvas.Instruction.SET_STROKE_STYLE,
+       state.strokeStyle, state.lineWidth, state.lineCap, state.lineJoin,
+       state.miterLimit, state.lineDash],
+      [ol.render.canvas.Instruction.BEGIN_PATH]);
   var ends = multiLineStringGeometry.getEnds();
   var flatCoordinates = multiLineStringGeometry.getFlatCoordinates();
   var stride = multiLineStringGeometry.getStride();
