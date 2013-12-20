@@ -595,7 +595,7 @@ goog.addDependency("../src/ol/geom/geometry.js", ["ol.geom.Geometry"], ["goog.as
 goog.addDependency("../src/ol/geom/geometrycollection.js", ["ol.geom.GeometryCollection"], ["goog.array", "goog.asserts", "goog.object", "ol.extent", "ol.geom.Geometry"]);
 goog.addDependency("../src/ol/geom/linearring.js", ["ol.geom.LinearRing"], ["ol.extent", "ol.geom.SimpleGeometry", "ol.geom.closest", "ol.geom.flat", "ol.geom.simplify"]);
 goog.addDependency("../src/ol/geom/linestring.js", ["ol.geom.LineString"], ["ol.extent", "ol.geom.SimpleGeometry", "ol.geom.closest", "ol.geom.flat", "ol.geom.simplify"]);
-goog.addDependency("../src/ol/geom/multilinestring.js", ["ol.geom.MultiLineString"], ["ol.extent", "ol.geom.LineString", "ol.geom.SimpleGeometry", "ol.geom.closest", "ol.geom.flat", "ol.geom.simplify"]);
+goog.addDependency("../src/ol/geom/multilinestring.js", ["ol.geom.MultiLineString"], ["goog.array", "goog.asserts", "ol.extent", "ol.geom.LineString", "ol.geom.SimpleGeometry", "ol.geom.closest", "ol.geom.flat", "ol.geom.simplify"]);
 goog.addDependency("../src/ol/geom/multipoint.js", ["ol.geom.MultiPoint"], ["ol.extent", "ol.geom.Point", "ol.geom.SimpleGeometry", "ol.geom.flat"]);
 goog.addDependency("../src/ol/geom/multipolygon.js", ["ol.geom.MultiPolygon"], ["ol.extent", "ol.geom.Polygon", "ol.geom.SimpleGeometry", "ol.geom.closest", "ol.geom.flat", "ol.geom.simplify"]);
 goog.addDependency("../src/ol/geom/point.js", ["ol.geom.Point"], ["goog.asserts", "ol.extent", "ol.geom.SimpleGeometry", "ol.geom.flat"]);
@@ -708,7 +708,7 @@ goog.addDependency("../src/ol/source/tileimagesource.js", ["ol.source.TileImage"
 goog.addDependency("../src/ol/source/tilejsonsource.js", ["ol.source.TileJSON", "ol.tilejson"], ["goog.asserts", "goog.net.jsloader", "ol.Attribution", "ol.TileRange", "ol.TileUrlFunction", "ol.extent", "ol.proj", "ol.source.State", "ol.source.TileImage", "ol.tilegrid.XYZ"]);
 goog.addDependency("../src/ol/source/tilesource.js", ["ol.source.Tile", "ol.source.TileOptions"], ["goog.functions", "ol.Attribution", "ol.Extent", "ol.Tile", "ol.TileCoord", "ol.TileRange", "ol.source.Source", "ol.tilegrid.TileGrid"]);
 goog.addDependency("../src/ol/source/tilewmssource.js", ["ol.source.TileWMS"], ["goog.array", "goog.math", "goog.object", "ol.TileCoord", "ol.TileUrlFunction", "ol.extent", "ol.source.TileImage", "ol.source.wms"]);
-goog.addDependency("../src/ol/source/vectorfilesource.js", ["ol.source.VectorFile"], ["goog.asserts", "goog.net.XhrIo", "ol.format.FormatType", "ol.proj", "ol.source.State", "ol.source.Vector"]);
+goog.addDependency("../src/ol/source/vectorfilesource.js", ["ol.source.VectorFile"], ["goog.asserts", "goog.dom.xml", "goog.net.XhrIo", "ol.format.FormatType", "ol.proj", "ol.source.State", "ol.source.Vector"]);
 goog.addDependency("../src/ol/source/vectorsource.js", ["ol.source.Vector", "ol.source.VectorEvent", "ol.source.VectorEventType"], ["goog.array", "goog.asserts", "goog.events", "goog.events.Event", "goog.events.EventType", "goog.object", "ol.source.Source", "ol.structs.RBush"]);
 goog.addDependency("../src/ol/source/wmssource.js", ["ol.source.wms", "ol.source.wms.ServerType"], ["goog.asserts", "goog.object", "goog.uri.utils"]);
 goog.addDependency("../src/ol/source/wmtssource.js", ["ol.source.WMTS", "ol.source.WMTSRequestEncoding"], ["goog.array", "goog.asserts", "goog.math", "goog.object", "goog.uri.utils", "ol.TileCoord", "ol.TileUrlFunction", "ol.TileUrlFunctionType", "ol.extent", "ol.proj", "ol.source.TileImage", "ol.tilegrid.WMTS"]);
@@ -22847,6 +22847,8 @@ ol.geom.LineString.prototype.setFlatCoordinates = function(layout, flatCoordinat
   this.dispatchChangeEvent()
 };
 goog.provide("ol.geom.MultiLineString");
+goog.require("goog.array");
+goog.require("goog.asserts");
 goog.require("ol.extent");
 goog.require("ol.geom.LineString");
 goog.require("ol.geom.SimpleGeometry");
@@ -22919,6 +22921,23 @@ ol.geom.MultiLineString.prototype.setFlatCoordinates = function(layout, flatCoor
   this.setFlatCoordinatesInternal(layout, flatCoordinates);
   this.ends_ = ends;
   this.dispatchChangeEvent()
+};
+ol.geom.MultiLineString.prototype.setLineStrings = function(lineStrings) {
+  var layout = ol.geom.GeometryLayout.XY;
+  var flatCoordinates = [];
+  var ends = [];
+  var i, ii;
+  for(i = 0, ii = lineStrings.length;i < ii;++i) {
+    var lineString = lineStrings[i];
+    if(i === 0) {
+      layout = lineString.getLayout()
+    }else {
+      goog.asserts.assert(lineString.getLayout() == layout)
+    }
+    goog.array.extend(flatCoordinates, lineString.getFlatCoordinates());
+    ends.push(flatCoordinates.length)
+  }
+  this.setFlatCoordinates(layout, flatCoordinates, ends)
 };
 goog.provide("ol.geom.Point");
 goog.require("goog.asserts");
@@ -27982,7 +28001,7 @@ ol.format.GeoJSON.prototype.readFeaturesFromObject = function(object) {
       return features
     }else {
       goog.asserts.fail();
-      return null
+      return[]
     }
   }
 };
@@ -28375,7 +28394,7 @@ ol.format.XML.prototype.readFeatures = function(source) {
         return this.readFeaturesFromDocument(doc)
       }else {
         goog.asserts.fail();
-        return null
+        return[]
       }
     }
   }
@@ -28637,8 +28656,8 @@ ol.xml.makeObjectPropertySetter = function(valueReader, opt_property, opt_obj) {
     }
   }
 };
-ol.xml.makeParsersNS = function(namespaceURIs, parsers) {
-  var parsersNS = {};
+ol.xml.makeParsersNS = function(namespaceURIs, parsers, opt_parsersNS) {
+  var parsersNS = goog.isDef(opt_parsersNS) ? opt_parsersNS : {};
   var i, ii;
   for(i = 0, ii = namespaceURIs.length;i < ii;++i) {
     parsersNS[namespaceURIs[i]] = parsers
@@ -28691,6 +28710,7 @@ goog.require("ol.style.Style");
 goog.require("ol.xml");
 ol.KML_RESPECT_VISIBILITY = false;
 ol.format.KMLVec2_;
+ol.format.KMLGxTrackObject_;
 ol.format.KML = function(opt_options) {
   goog.base(this);
   var sharedStyles = {};
@@ -28714,6 +28734,7 @@ ol.format.KML = function(opt_options) {
 };
 goog.inherits(ol.format.KML, ol.format.XML);
 ol.format.KML.EXTENSIONS_ = [".kml"];
+ol.format.KML.GX_NAMESPACE_URIS_ = ["http://www.google.com/kml/ext/2.2"];
 ol.format.KML.NAMESPACE_URIS_ = [null, "http://earth.google.com/kml/2.0", "http://earth.google.com/kml/2.1", "http://earth.google.com/kml/2.2", "http://www.opengis.net/kml/2.2"];
 ol.format.KML.DEFAULT_COLOR_ = [255, 255, 255, 1];
 ol.format.KML.DEFAULT_FILL_STYLE_ = new ol.style.Fill({color:ol.format.KML.DEFAULT_COLOR_});
@@ -28904,6 +28925,56 @@ ol.format.KML.readFlatLinearRing_ = function(node, objectStack) {
   goog.asserts.assert(node.nodeType == goog.dom.NodeType.ELEMENT);
   goog.asserts.assert(node.localName == "LinearRing");
   return(ol.xml.pushAndParse(null, ol.format.KML.FLAT_LINEAR_RING_PARSERS_, node, objectStack))
+};
+ol.format.KML.gxCoordParser_ = function(node, objectStack) {
+  goog.asserts.assert(node.nodeType == goog.dom.NodeType.ELEMENT);
+  goog.asserts.assert(goog.array.indexOf(ol.format.KML.GX_NAMESPACE_URIS_, node.namespaceURI) != -1);
+  goog.asserts.assert(node.localName == "coord");
+  var gxTrackObject = (objectStack[objectStack.length - 1]);
+  goog.asserts.assert(goog.isObject(gxTrackObject));
+  var flatCoordinates = gxTrackObject.flatCoordinates;
+  var s = ol.xml.getAllTextContent(node, false);
+  var re = /^\s*([+\-]?\d+(?:\.\d*)?(?:e[+\-]?\d*)?)\s+([+\-]?\d+(?:\.\d*)?(?:e[+\-]?\d*)?)\s+([+\-]?\d+(?:\.\d*)?(?:e[+\-]?\d*)?)\s*$/i;
+  var m = re.exec(s);
+  if(m) {
+    var x = parseFloat(m[1]);
+    var y = parseFloat(m[2]);
+    var z = parseFloat(m[3]);
+    flatCoordinates.push(x, y, z, 0)
+  }else {
+    flatCoordinates.push(0, 0, 0, 0)
+  }
+};
+ol.format.KML.readGxMultiTrack_ = function(node, objectStack) {
+  goog.asserts.assert(node.nodeType == goog.dom.NodeType.ELEMENT);
+  goog.asserts.assert(goog.array.indexOf(ol.format.KML.GX_NAMESPACE_URIS_, node.namespaceURI) != -1);
+  goog.asserts.assert(node.localName == "MultiTrack");
+  var lineStrings = ol.xml.pushAndParse(([]), ol.format.KML.GX_MULTITRACK_GEOMETRY_PARSERS_, node, objectStack);
+  if(!goog.isDef(lineStrings)) {
+    return undefined
+  }
+  var multiLineString = new ol.geom.MultiLineString(null);
+  multiLineString.setLineStrings(lineStrings);
+  return multiLineString
+};
+ol.format.KML.readGxTrack_ = function(node, objectStack) {
+  goog.asserts.assert(node.nodeType == goog.dom.NodeType.ELEMENT);
+  goog.asserts.assert(goog.array.indexOf(ol.format.KML.GX_NAMESPACE_URIS_, node.namespaceURI) != -1);
+  goog.asserts.assert(node.localName == "Track");
+  var gxTrackObject = ol.xml.pushAndParse(({flatCoordinates:[], whens:[]}), ol.format.KML.GX_TRACK_PARSERS_, node, objectStack);
+  if(!goog.isDef(gxTrackObject)) {
+    return undefined
+  }
+  var flatCoordinates = gxTrackObject.flatCoordinates;
+  var whens = gxTrackObject.whens;
+  goog.asserts.assert(flatCoordinates.length / 4 == whens.length);
+  var i, ii;
+  for(i = 0, ii = Math.min(flatCoordinates.length, whens.length);i < ii;++i) {
+    flatCoordinates[4 * i + 3] = whens[i]
+  }
+  var lineString = new ol.geom.LineString(null);
+  lineString.setFlatCoordinates(ol.geom.GeometryLayout.XYZM, flatCoordinates);
+  return lineString
 };
 ol.format.KML.readIcon_ = function(node, objectStack) {
   goog.asserts.assert(node.nodeType == goog.dom.NodeType.ELEMENT);
@@ -29157,20 +29228,53 @@ ol.format.KML.outerBoundaryIsParser_ = function(node, objectStack) {
     flatLinearRings[0] = flatLinearRing
   }
 };
+ol.format.KML.whenParser_ = function(node, objectStack) {
+  goog.asserts.assert(node.nodeType == goog.dom.NodeType.ELEMENT);
+  goog.asserts.assert(node.localName == "when");
+  var gxTrackObject = (objectStack[objectStack.length - 1]);
+  goog.asserts.assert(goog.isObject(gxTrackObject));
+  var whens = gxTrackObject.whens;
+  var s = ol.xml.getAllTextContent(node, false);
+  var re = /^\s*(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(Z|(?:([+\-])(\d{2})(?::(\d{2}))?))\s*$/;
+  var m = re.exec(s);
+  if(m) {
+    var year = parseInt(m[1], 10);
+    var month = parseInt(m[2], 10) - 1;
+    var day = parseInt(m[3], 10);
+    var hour = parseInt(m[4], 10);
+    var minute = parseInt(m[5], 10);
+    var second = parseInt(m[6], 10);
+    var date = new Date(year, month, day, hour, minute, second, 0);
+    var t = date.getTime() / 1E3;
+    if(m[7] != "Z") {
+      var sign = m[8] == "-" ? -1 : 1;
+      t += sign * 60 * parseInt(m[9], 10);
+      if(goog.isDef(m[10])) {
+        t += sign * 60 * 60 * parseInt(m[10], 10)
+      }
+    }
+    whens.push(t)
+  }else {
+    whens.push(0)
+  }
+};
 ol.format.KML.DATA_PARSERS_ = ol.xml.makeParsersNS(ol.format.KML.NAMESPACE_URIS_, {"value":ol.xml.makeReplacer(ol.format.KML.readString_)});
 ol.format.KML.EXTENDED_DATA_PARSERS_ = ol.xml.makeParsersNS(ol.format.KML.NAMESPACE_URIS_, {"Data":ol.format.KML.DataParser_, "SchemaData":ol.format.KML.SchemaDataParser_});
 ol.format.KML.FLAT_LINEAR_RING_PARSERS_ = ol.xml.makeParsersNS(ol.format.KML.NAMESPACE_URIS_, {"coordinates":ol.xml.makeReplacer(ol.format.KML.readFlatCoordinates_)});
 ol.format.KML.FLAT_LINEAR_RINGS_PARSERS_ = ol.xml.makeParsersNS(ol.format.KML.NAMESPACE_URIS_, {"innerBoundaryIs":ol.format.KML.innerBoundaryIsParser_, "outerBoundaryIs":ol.format.KML.outerBoundaryIsParser_});
+ol.format.KML.GX_TRACK_PARSERS_ = ol.xml.makeParsersNS(ol.format.KML.NAMESPACE_URIS_, {"when":ol.format.KML.whenParser_}, ol.xml.makeParsersNS(ol.format.KML.GX_NAMESPACE_URIS_, {"coord":ol.format.KML.gxCoordParser_}));
 ol.format.KML.GEOMETRY_FLAT_COORDINATES_PARSERS_ = ol.xml.makeParsersNS(ol.format.KML.NAMESPACE_URIS_, {"coordinates":ol.xml.makeReplacer(ol.format.KML.readFlatCoordinates_)});
 ol.format.KML.ICON_PARSERS_ = ol.xml.makeParsersNS(ol.format.KML.NAMESPACE_URIS_, {"href":ol.xml.makeObjectPropertySetter(ol.format.KML.readString_)});
 ol.format.KML.ICON_STYLE_PARSERS_ = ol.xml.makeParsersNS(ol.format.KML.NAMESPACE_URIS_, {"Icon":ol.xml.makeObjectPropertySetter(ol.format.KML.readIcon_), "heading":ol.xml.makeObjectPropertySetter(ol.format.KML.readNumber_), "hotSpot":ol.xml.makeObjectPropertySetter(ol.format.KML.readVec2_), "scale":ol.xml.makeObjectPropertySetter(ol.format.KML.readscale_)});
 ol.format.KML.INNER_BOUNDARY_IS_PARSERS_ = ol.xml.makeParsersNS(ol.format.KML.NAMESPACE_URIS_, {"LinearRing":ol.xml.makeReplacer(ol.format.KML.readFlatLinearRing_)});
 ol.format.KML.LINE_STYLE_PARSERS_ = ol.xml.makeParsersNS(ol.format.KML.NAMESPACE_URIS_, {"color":ol.xml.makeObjectPropertySetter(ol.format.KML.readColor_), "width":ol.xml.makeObjectPropertySetter(ol.format.KML.readNumber_)});
 ol.format.KML.MULTI_GEOMETRY_PARSERS_ = ol.xml.makeParsersNS(ol.format.KML.NAMESPACE_URIS_, {"LineString":ol.xml.makeArrayPusher(ol.format.KML.readLineString_), "MultiGeometry":ol.xml.makeArrayPusher(ol.format.KML.readMultiGeometry_), "Point":ol.xml.makeArrayPusher(ol.format.KML.readPoint_), "Polygon":ol.xml.makeArrayPusher(ol.format.KML.readPolygon_)});
+ol.format.KML.GX_MULTITRACK_GEOMETRY_PARSERS_ = ol.xml.makeParsersNS(ol.format.KML.GX_NAMESPACE_URIS_, {"Track":ol.xml.makeArrayPusher(ol.format.KML.readGxTrack_)});
 ol.format.KML.OUTER_BOUNDARY_IS_PARSERS_ = ol.xml.makeParsersNS(ol.format.KML.NAMESPACE_URIS_, {"LinearRing":ol.xml.makeReplacer(ol.format.KML.readFlatLinearRing_)});
 ol.format.KML.PAIR_PARSERS_ = ol.xml.makeParsersNS(ol.format.KML.NAMESPACE_URIS_, {"Style":ol.xml.makeObjectPropertySetter(ol.format.KML.readStyle_), "key":ol.xml.makeObjectPropertySetter(ol.format.KML.readString_), "styleUrl":ol.xml.makeObjectPropertySetter(ol.format.KML.readStyleUrl_)});
 ol.format.KML.PLACEMARK_PARSERS_ = ol.xml.makeParsersNS(ol.format.KML.NAMESPACE_URIS_, {"ExtendedData":ol.format.KML.ExtendedDataParser_, "MultiGeometry":ol.xml.makeObjectPropertySetter(ol.format.KML.readMultiGeometry_, "geometry"), "LineString":ol.xml.makeObjectPropertySetter(ol.format.KML.readLineString_, "geometry"), "Point":ol.xml.makeObjectPropertySetter(ol.format.KML.readPoint_, "geometry"), "Polygon":ol.xml.makeObjectPropertySetter(ol.format.KML.readPolygon_, "geometry"), "Style":ol.xml.makeObjectPropertySetter(ol.format.KML.readStyle_), 
-"StyleMap":ol.format.KML.StyleMapParser_, "address":ol.xml.makeObjectPropertySetter(ol.format.KML.readString_), "description":ol.xml.makeObjectPropertySetter(ol.format.KML.readString_), "name":ol.xml.makeObjectPropertySetter(ol.format.KML.readString_), "open":ol.xml.makeObjectPropertySetter(ol.format.KML.readBoolean_), "phoneNumber":ol.xml.makeObjectPropertySetter(ol.format.KML.readString_), "styleUrl":ol.xml.makeObjectPropertySetter(ol.format.KML.readURI_), "visibility":ol.xml.makeObjectPropertySetter(ol.format.KML.readBoolean_)});
+"StyleMap":ol.format.KML.StyleMapParser_, "address":ol.xml.makeObjectPropertySetter(ol.format.KML.readString_), "description":ol.xml.makeObjectPropertySetter(ol.format.KML.readString_), "name":ol.xml.makeObjectPropertySetter(ol.format.KML.readString_), "open":ol.xml.makeObjectPropertySetter(ol.format.KML.readBoolean_), "phoneNumber":ol.xml.makeObjectPropertySetter(ol.format.KML.readString_), "styleUrl":ol.xml.makeObjectPropertySetter(ol.format.KML.readURI_), "visibility":ol.xml.makeObjectPropertySetter(ol.format.KML.readBoolean_)}, 
+ol.xml.makeParsersNS(ol.format.KML.GX_NAMESPACE_URIS_, {"MultiTrack":ol.xml.makeObjectPropertySetter(ol.format.KML.readGxMultiTrack_, "geometry")}));
 ol.format.KML.POLY_STYLE_PARSERS_ = ol.xml.makeParsersNS(ol.format.KML.NAMESPACE_URIS_, {"color":ol.xml.makeObjectPropertySetter(ol.format.KML.readColor_), "fill":ol.xml.makeObjectPropertySetter(ol.format.KML.readBoolean_), "outline":ol.xml.makeObjectPropertySetter(ol.format.KML.readBoolean_)});
 ol.format.KML.SCHEMA_DATA_PARSERS_ = ol.xml.makeParsersNS(ol.format.KML.NAMESPACE_URIS_, {"SimpleData":ol.format.KML.SimpleDataParser_});
 ol.format.KML.STYLE_PARSERS_ = ol.xml.makeParsersNS(ol.format.KML.NAMESPACE_URIS_, {"IconStyle":ol.format.KML.IconStyleParser_, "LineStyle":ol.format.KML.LineStyleParser_, "PolyStyle":ol.format.KML.PolyStyleParser_});
@@ -32412,6 +32516,7 @@ goog.debug.entryPointRegistry.register(function(transformer) {
 });
 goog.provide("ol.source.VectorFile");
 goog.require("goog.asserts");
+goog.require("goog.dom.xml");
 goog.require("goog.net.XhrIo");
 goog.require("ol.format.FormatType");
 goog.require("ol.proj");
@@ -32454,7 +32559,10 @@ ol.source.VectorFile.prototype.handleXhrIo_ = function(event) {
           source = xhrIo.getResponseText()
         }else {
           if(type == ol.format.FormatType.XML) {
-            source = xhrIo.getResponseXml()
+            source = xhrIo.getResponseXml();
+            if(goog.isNull(source)) {
+              source = goog.dom.xml.loadXml(xhrIo.getResponseText())
+            }
           }else {
             goog.asserts.fail()
           }
