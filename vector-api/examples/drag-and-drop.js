@@ -1,8 +1,8 @@
 var map = new ol.Map({
   interactions: ol.interaction.defaults().extend([
     new ol.interaction.DragAndDrop({
-      formatConstructors: [
-        ol.format.KML
+      formats: [
+        new ol.format.KML()
       ]
     })
   ]),

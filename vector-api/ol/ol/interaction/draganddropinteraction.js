@@ -35,10 +35,9 @@ ol.interaction.DragAndDrop = function(opt_options) {
 
   /**
    * @private
-   * @type {Array.<function(new: ol.format.Format)>}
+   * @type {Array.<ol.format.Format>}
    */
-  this.formatConstructors_ = goog.isDef(options.formatConstructors) ?
-      options.formatConstructors : [];
+  this.formats_ = goog.isDef(options.formats) ? options.formats : [];
 
   /**
    * @private
@@ -111,14 +110,13 @@ ol.interaction.DragAndDrop.prototype.handleResult_ = function(result) {
   } else {
     targetProjection = view2D.getProjection();
   }
-  var formatConstructors = this.formatConstructors_;
+  var formats = this.formats_;
   var features = [];
   var i, ii;
-  for (i = 0, ii = formatConstructors.length; i < ii; ++i) {
-    var formatConstructor = formatConstructors[i];
-    var format = new formatConstructor();
+  for (i = 0, ii = formats.length; i < ii; ++i) {
+    var format = formats[i];
     var readFeatures = this.tryReadFeatures_(format, result);
-    if (!goog.isNull(readFeatures)) {
+    if (readFeatures.length > 0) {
       var featureProjection = format.readProjection(result);
       var transform = ol.proj.getTransform(featureProjection, targetProjection);
       var j, jj;
