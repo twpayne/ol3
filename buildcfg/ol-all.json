@@ -6,6 +6,7 @@
     "//json.js",
     "../build/src/external/externs/types.js",
     "../externs/bingmaps.js",
+    "../externs/cesium.js",
     "../externs/geojson.js",
     "../externs/topojson.js",
     "../externs/oli.js",

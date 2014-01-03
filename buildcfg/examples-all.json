@@ -4,6 +4,7 @@
         "//jquery-1.7.js", 
         "../externs/bingmaps.js", 
         "../externs/bootstrap.js", 
+        "../externs/cesium.js",
         "../externs/geojson.js", 
         "../externs/topojson.js", 
         "../externs/oli.js", 
