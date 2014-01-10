@@ -6,9 +6,11 @@ goog.require('goog.dom.TagName');
 goog.require('goog.functions');
 goog.require('goog.style');
 goog.require('ol.css');
+goog.require('ol.layer.Element');
 goog.require('ol.layer.Image');
 goog.require('ol.layer.Tile');
 goog.require('ol.renderer.Map');
+goog.require('ol.renderer.dom.ElementLayer');
 goog.require('ol.renderer.dom.ImageLayer');
 goog.require('ol.renderer.dom.Layer');
 goog.require('ol.renderer.dom.TileLayer');
@@ -62,7 +64,9 @@ goog.inherits(ol.renderer.dom.Map, ol.renderer.Map);
  */
 ol.renderer.dom.Map.prototype.createLayerRenderer = function(layer) {
   var layerRenderer;
-  if (ol.ENABLE_IMAGE && layer instanceof ol.layer.Image) {
+  if (ol.ENABLE_ELEMENT && layer instanceof ol.layer.Element) {
+    layerRenderer = new ol.renderer.dom.ElementLayer(this, layer);
+  } else if (ol.ENABLE_IMAGE && layer instanceof ol.layer.Image) {
     layerRenderer = new ol.renderer.dom.ImageLayer(this, layer);
   } else if (ol.ENABLE_TILE && layer instanceof ol.layer.Tile) {
     layerRenderer = new ol.renderer.dom.TileLayer(this, layer);
