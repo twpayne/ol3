@@ -25,6 +25,12 @@ ol.ENABLE_DOM = true;
 
 
 /**
+ * @define {boolean} Whether to enable rendering of element layers.
+ */
+ol.ENABLE_ELEMENT = true;
+
+
+/**
  * @define {boolean} Whether to enable rendering of image layers.
  */
 ol.ENABLE_IMAGE = true;
