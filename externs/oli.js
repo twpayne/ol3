@@ -20,6 +20,15 @@ oli.CollectionEvent.prototype.element;
 
 
 /** @interface */
+oli.ObjectEvent;
+
+
+/** @type {string} */
+oli.ObjectEvent.prototype.key;
+
+
+
+/** @interface */
 oli.MapBrowserEvent;
 
 
