@@ -41,7 +41,7 @@ oli.ObjectEvent.prototype.key;
 oli.MapBrowserEvent;
 
 
-/** @type {goog.events.BrowserEvent} */
+/** @type {Event} */
 oli.MapBrowserEvent.prototype.browserEvent;
 
 
