@@ -20,6 +20,15 @@ oli.CollectionEvent.prototype.element;
 
 
 /** @interface */
+oli.DrawEvent;
+
+
+/** @type {ol.Feature} */
+oli.DrawEvent.prototype.feature;
+
+
+
+/** @interface */
 oli.ObjectEvent;
 
 
