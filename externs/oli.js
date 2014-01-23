@@ -18,6 +18,24 @@ oli.CollectionEvent = function() {};
 oli.CollectionEvent.prototype.element;
 
 
+
+/** @interface */
+oli.MapBrowserEvent;
+
+
+/** @type {goog.events.BrowserEvent} */
+oli.MapBrowserEvent.prototype.browserEvent;
+
+
+/** @type {ol.Coordinate} */
+oli.MapBrowserEvent.prototype.coordinate;
+
+
+/** @type {ol.Pixel} */
+oli.MapBrowserEvent.prototype.pixel;
+
+
+
 /**
  * @interface
  */

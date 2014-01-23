@@ -543,7 +543,9 @@ ol.Map.prototype.getEventPixel = function(event) {
   // the last finger is removed from the screen.
   // So we ourselves compute the position of touch events.
   // See https://code.google.com/p/closure-library/issues/detail?id=588
-  if (goog.isDef(event.changedTouches)) {
+  if (goog.isNull(event)) {
+    return null;
+  } else if (goog.isDef(event.changedTouches)) {
     var touch = event.changedTouches.item(0);
     var viewportPosition = goog.style.getClientPosition(this.viewport_);
     return [
@@ -777,7 +779,7 @@ ol.Map.prototype.handleMapBrowserEvent = function(mapBrowserEvent) {
     // coordinates so interactions cannot be used.
     return;
   }
-  this.focus_ = mapBrowserEvent.getCoordinate();
+  this.focus_ = mapBrowserEvent.coordinate;
   mapBrowserEvent.frameState = this.frameState_;
   var interactions = this.getInteractions();
   var interactionsArray = /** @type {Array.<ol.interaction.Interaction>} */

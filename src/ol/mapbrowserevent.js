@@ -18,6 +18,7 @@ goog.require('ol.Pixel');
 /**
  * @constructor
  * @extends {ol.MapEvent}
+ * @implements {oli.MapBrowserEvent}
  * @param {string} type Event type.
  * @param {ol.Map} map Map.
  * @param {goog.events.BrowserEvent} browserEvent Browser event.
@@ -29,59 +30,22 @@ ol.MapBrowserEvent = function(type, map, browserEvent, opt_frameState) {
   goog.base(this, type, map, opt_frameState);
 
   /**
-   * @const
    * @type {goog.events.BrowserEvent}
    */
   this.browserEvent = browserEvent;
 
   /**
-   * @private
    * @type {ol.Coordinate}
    */
-  this.coordinate_ = null;
+  this.coordinate = map.getEventCoordinate(browserEvent.getBrowserEvent());
 
   /**
-   * @private
    * @type {ol.Pixel}
    */
-  this.pixel_ = null;
+  this.pixel = map.getEventPixel(browserEvent.getBrowserEvent());
 
 };
 goog.inherits(ol.MapBrowserEvent, ol.MapEvent);
-
-
-/**
- * @return {Event} The underlying browser event object.
- */
-ol.MapBrowserEvent.prototype.getBrowserEvent = function() {
-  return this.browserEvent.getBrowserEvent();
-};
-
-
-/**
- * @return {ol.Coordinate} Coordinate.
- * @todo stability experimental
- */
-ol.MapBrowserEvent.prototype.getCoordinate = function() {
-  if (goog.isNull(this.coordinate_)) {
-    this.coordinate_ = this.map.getEventCoordinate(
-        this.browserEvent.getBrowserEvent());
-  }
-  return this.coordinate_;
-};
-
-
-/**
- * Get pixel offset of the event from the top-left corner of the map viewport.
- * @return {ol.Pixel} Pixel offset.
- * @todo stability experimental
- */
-ol.MapBrowserEvent.prototype.getPixel = function() {
-  if (goog.isNull(this.pixel_)) {
-    this.pixel_ = this.map.getEventPixel(this.browserEvent.getBrowserEvent());
-  }
-  return this.pixel_;
-};
 
 
 /**

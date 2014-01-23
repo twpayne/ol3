@@ -23,7 +23,7 @@ describe('ol.MapBrowserEventHandler', function() {
     });
 
     it('emulates click', function() {
-      handler.emulateClick_();
+      handler.emulateClick_(new goog.events.BrowserEvent());
       expect(singleclickSpy.called).to.not.be.ok();
       expect(dblclickSpy.called).to.not.be.ok();
 
@@ -31,17 +31,17 @@ describe('ol.MapBrowserEventHandler', function() {
       expect(singleclickSpy.calledOnce).to.be.ok();
       expect(dblclickSpy.called).to.not.be.ok();
 
-      handler.emulateClick_();
+      handler.emulateClick_(new goog.events.BrowserEvent());
       expect(singleclickSpy.calledOnce).to.be.ok();
       expect(dblclickSpy.called).to.not.be.ok();
     });
 
     it('emulates dblclick', function() {
-      handler.emulateClick_();
+      handler.emulateClick_(new goog.events.BrowserEvent());
       expect(singleclickSpy.called).to.not.be.ok();
       expect(dblclickSpy.called).to.not.be.ok();
 
-      handler.emulateClick_();
+      handler.emulateClick_(new goog.events.BrowserEvent());
       expect(singleclickSpy.called).to.not.be.ok();
       expect(dblclickSpy.calledOnce).to.be.ok();
 
