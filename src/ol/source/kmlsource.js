@@ -1,13 +1,13 @@
 goog.provide('ol.source.KML');
 
 goog.require('ol.format.KML');
-goog.require('ol.source.VectorFile');
+goog.require('ol.source.StaticVector');
 
 
 
 /**
  * @constructor
- * @extends {ol.source.VectorFile}
+ * @extends {ol.source.StaticVector}
  * @param {olx.source.KMLOptions=} opt_options Options.
  * @todo stability experimental
  */
@@ -31,4 +31,4 @@ ol.source.KML = function(opt_options) {
   });
 
 };
-goog.inherits(ol.source.KML, ol.source.VectorFile);
+goog.inherits(ol.source.KML, ol.source.StaticVector);
