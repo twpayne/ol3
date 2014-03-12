@@ -213,12 +213,14 @@ ol.renderer.canvas.VectorLayer.prototype.prepareFrame =
   }
 
   var frameStateExtent = frameState.extent;
-  var frameStateResolution = frameState.view2DState.resolution;
+  var view2DState = frameState.view2DState;
+  var projection = view2DState.projection;
+  var resolution = view2DState.resolution;
   var pixelRatio = frameState.pixelRatio;
   var vectorLayerRevision = vectorLayer.getRevision();
 
   if (!this.dirty_ &&
-      this.renderedResolution_ == frameStateResolution &&
+      this.renderedResolution_ == resolution &&
       this.renderedRevision_ == vectorLayerRevision &&
       ol.extent.containsExtent(this.renderedExtent_, frameStateExtent)) {
     return;
@@ -242,23 +244,22 @@ ol.renderer.canvas.VectorLayer.prototype.prepareFrame =
   if (!goog.isDef(styleFunction)) {
     styleFunction = ol.feature.defaultStyleFunction;
   }
-  var tolerance = frameStateResolution / (2 * pixelRatio);
-  var replayGroup = new ol.render.canvas.ReplayGroup(tolerance, extent,
-      frameStateResolution);
-  vectorSource.loadFeatures(extent, frameStateResolution);
+  var tolerance = resolution / (2 * pixelRatio);
+  var replayGroup =
+      new ol.render.canvas.ReplayGroup(tolerance, extent, resolution);
+  vectorSource.loadFeatures(extent, resolution, projection);
   vectorSource.forEachFeatureInExtent(extent,
       /**
        * @param {ol.Feature} feature Feature.
        */
       function(feature) {
-        var dirty =
-            this.renderFeature(feature, frameStateResolution, pixelRatio,
-                styleFunction, replayGroup);
+        var dirty = this.renderFeature(
+            feature, resolution, pixelRatio, styleFunction, replayGroup);
         this.dirty_ = this.dirty_ || dirty;
       }, this);
   replayGroup.finish();
 
-  this.renderedResolution_ = frameStateResolution;
+  this.renderedResolution_ = resolution;
   this.renderedRevision_ = vectorLayerRevision;
   this.replayGroup_ = replayGroup;
 
