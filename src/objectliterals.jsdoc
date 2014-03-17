@@ -338,6 +338,7 @@
  * @property {string} featureNS The namespace URI used for features.
  * @property {string} featureType The feature type to parse. Only used for
  *     read operations.
+ * @property {ol.proj.ProjectionLike} projection Projection.
  * @property {string|undefined} schemaLocation Optional schemaLocation to use
  *     for serialization, this will override the default.
  */
@@ -978,6 +979,21 @@
  * @property {string|undefined} text Text.
  * @property {string|undefined} url URL.
  * @property {Array.<string>|undefined} urls URLs.
+ */
+
+/**
+ * @typedef {Object} olx.source.WFSServerOptions
+ * @property {Array.<ol.Attribution>|undefined} attributions Attributions.
+ * @property {ol.Extent|undefined} extent Extent.
+ * @property {ol.format.Feature|undefined} format Format.
+ * @property {function(this: ol.source.ServerVector, ol.Extent, number, ol.proj.Projection)} loadingFunction Loading function.
+ * @property {function(ol.Extent, number): Array.<ol.Extent>} loadingStrategy Loading strategy.
+ * @property {string|undefined} logo Logo.
+ * @property {string|undefined} method Method. Default is `get`.
+ * @property {string} url URL.
+ * @property {olx.format.WFSWriteGetFeatureOptions} wfsWriteGetFeatureOptions Get feature options.
+ * @property {olx.format.WFSOptions|undefined} wfsOptions WFS options.
+ * @property {ol.proj.ProjectionLike} projection Projection.
  */
 
 /**
