@@ -7,6 +7,7 @@ goog.require('ol.format.GML');
 goog.require('ol.format.XMLFeature');
 goog.require('ol.format.XSD');
 goog.require('ol.geom.Geometry');
+goog.require('ol.proj');
 goog.require('ol.xml');
 
 
@@ -40,6 +41,13 @@ ol.format.WFS = function(opt_options) {
    */
   this.schemaLocation_ = goog.isDef(options.schemaLocation) ?
       options.schemaLocation : ol.format.WFS.schemaLocation_;
+
+  /**
+   * @private
+   * @type {ol.proj.Projection}
+   */
+  this.projection_ = ol.proj.get(goog.isDef(options.projection) ?
+      options.projection : 'EPSG:4326');
 
   goog.base(this);
 };
@@ -144,6 +152,14 @@ ol.format.WFS.prototype.readFeatureCollectionMetadataFromDocument =
     }
   }
   return undefined;
+};
+
+
+/**
+ * @inheritDoc
+ */
+ol.format.WFS.prototype.readProjectionFromDocument = function(doc) {
+  return this.projection_;
 };
 
 
