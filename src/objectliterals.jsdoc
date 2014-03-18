@@ -338,7 +338,8 @@
  * @property {string} featureNS The namespace URI used for features.
  * @property {string} featureType The feature type to parse. Only used for
  *     read operations.
- * @property {ol.proj.ProjectionLike} projection Projection.
+ * @property {ol.proj.ProjectionLike|undefined} remoteProjection Remote projection.
+ *     Default is EPSG:4326.
  * @property {string|undefined} schemaLocation Optional schemaLocation to use
  *     for serialization, this will override the default.
  */
@@ -990,10 +991,10 @@
  * @property {function(ol.Extent, number): Array.<ol.Extent>} loadingStrategy Loading strategy.
  * @property {string|undefined} logo Logo.
  * @property {string|undefined} method Method. Default is `get`.
+ * @property {ol.proj.ProjectionLike} projection Projection.
  * @property {string} url URL.
  * @property {olx.format.WFSWriteGetFeatureOptions} wfsWriteGetFeatureOptions Get feature options.
  * @property {olx.format.WFSOptions|undefined} wfsOptions WFS options.
- * @property {ol.proj.ProjectionLike} projection Projection.
  */
 
 /**

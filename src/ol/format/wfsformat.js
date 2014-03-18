@@ -46,8 +46,8 @@ ol.format.WFS = function(opt_options) {
    * @private
    * @type {ol.proj.Projection}
    */
-  this.projection_ = ol.proj.get(goog.isDef(options.projection) ?
-      options.projection : 'EPSG:4326');
+  this.remoteProjection_ = ol.proj.get(goog.isDef(options.remoteProjection) ?
+      options.remoteProjection : 'EPSG:4326');
 
   goog.base(this);
 };
@@ -159,7 +159,7 @@ ol.format.WFS.prototype.readFeatureCollectionMetadataFromDocument =
  * @inheritDoc
  */
 ol.format.WFS.prototype.readProjectionFromDocument = function(doc) {
-  return this.projection_;
+  return this.remoteProjection_;
 };
 
 

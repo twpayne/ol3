@@ -6,6 +6,7 @@ goog.require('goog.object');
 goog.require('goog.uri.utils');
 goog.require('ol.extent');
 goog.require('ol.format.WFS');
+goog.require('ol.proj');
 goog.require('ol.source.ServerVector');
 
 
@@ -19,8 +20,9 @@ ol.source.WFSServer = function(options) {
 
   var format = new ol.format.WFS(options.wfsOptions);
   var method = goog.isDef(options.method) ? options.method : 'get';
-  var projection = ol.proj.get(goog.isDef(options.projection) ?
-      options.projection : 'EPSG:4326');
+  var remoteProjection = ol.proj.get(
+      goog.isDef(options.wfsOptions.remoteProjection) ?
+      options.wfsOptions.remoteProjection : 'EPSG:4326');
   var url = options.url;
   var wfsWriteGetFeatureOptions = options.wfsWriteGetFeatureOptions;
 
@@ -39,29 +41,29 @@ ol.source.WFSServer = function(options) {
       var typeNames = typeNamesArray.join(',');
       loadingFunction =
           /**
-           * @param {ol.Extent} requestExtent Request extent.
-           * @param {number} requestResolution Request resolution.
-           * @param {ol.proj.Projection} requestProjection Request projection.
+           * @param {ol.Extent} extent Extent.
+           * @param {number} resolution Resolution.
+           * @param {ol.proj.Projection} projection Projection.
            * @this {ol.source.WFSServer}
            */
-          function(requestExtent, requestResolution, requestProjection) {
-        var transform = ol.proj.getTransform(requestProjection, projection);
-        var extent = transform(requestExtent, []);
+          function(extent, resolution, projection) {
+        var transform = ol.proj.getTransform(projection, remoteProjection);
+        var remoteExtent = transform(extent, []);
         /** @type {string} */
         var bbox;
-        var c = projection.getAxisOrientation().charAt(0);
+        var c = remoteProjection.getAxisOrientation().charAt(0);
         if (c == 'n' || c == 's') {
-          bbox =
-              extent[1] + ',' + extent[0] + ',' + extent[3] + ',' + extent[2];
+          bbox = remoteExtent[1] + ',' + remoteExtent[0] + ',' +
+              remoteExtent[3] + ',' + remoteExtent[2];
         } else {
-          bbox = extent.join(',');
+          bbox = remoteExtent.join(',');
         }
         var params = {
           'service': 'wfs',
           'version': '1.1.0',
           'request': 'GetFeature',
           'typeNames': typeNames,
-          'srsName': projection.getCode(),
+          'srsName': remoteProjection.getCode(),
           'bbox': bbox
         };
         var url = goog.uri.utils.appendParamsFromMap(options.url, params);
@@ -104,7 +106,7 @@ ol.source.WFSServer = function(options) {
     loadingFunction: loadingFunction,
     loadingStrategy: options.loadingStrategy,
     logo: options.logo,
-    projection: projection
+    projection: options.projection
   });
 
 };

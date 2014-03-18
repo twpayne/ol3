@@ -18,7 +18,7 @@ describe('ol.format.GML', function() {
 
   describe('#readGeometry', function() {
 
-    describe('point', function() {
+    describe.only('point', function() {
 
       it('can read and write a point geometry', function() {
         var text =

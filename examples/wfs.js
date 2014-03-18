@@ -13,12 +13,13 @@ var map = new ol.Map({
     }),
     new ol.layer.Vector({
       source: new ol.source.WFSServer({
-        method : 'get',
+        method: 'get',
+        projection: 'EPSG:3857',
         url: 'http://suite.opengeo.org/geoserver/wfs',
         wfsOptions: {
           featureNS: 'http://census.gov',
           featureType: 'states',
-          projection: 'EPSG:4326'
+          remoteProjection: 'EPSG:4326'
         },
         wfsWriteGetFeatureOptions: {
           geometryName: 'the_geom',
